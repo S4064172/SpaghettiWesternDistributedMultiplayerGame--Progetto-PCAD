@@ -1,0 +1,6 @@
+
+--> File di log
+è stato inserito un file di log per evitare che il client durante la riconnessione 
+scegliesse le porte appena utilizzate. è necessario cambiarle per evitare che il server
+veda un client on quando in realta non lo è.
+

@@ -1,7 +1,5 @@
 package Client;
 
-
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -18,7 +16,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
-
 import com.mxgraph.view.mxGraph;
 import ClientGraph.Grafox;
 import ServerClient.InfoGiocatore;
@@ -31,7 +28,6 @@ import static ServerClient.EnumKeyErrorCode.*;
 public class Client {
 	
 	//Socket per la gestione della comunicazione
-	
 	private Socket socketClient; //socket della fase di registrazione
 	private ServerSocket socketServer; //socket della fase di gioco
 	private ServerSocket socketChat; //socket della fase di chat
@@ -49,12 +45,10 @@ public class Client {
 	private List<String> keyErrorCode; //Lista dei codici di errore
 	private ConcurrentHashMap<String, String> errorCode; //Associazione codice errore significato
 	private InfoGraph infoGraph;
-	
-	
-	
+		
 	//Procedure per il controllo dello stato del server
-	private ThreadPingPong threadPingPong; //Questo servizioni server per farsi pingare dal server
-	private PingPong pingPong; //Questo servizio server per  controllare lo stato del server
+	private TPingPongServerToClinet threadPingPong; //Questo servizioni server per farsi pingare dal server
+	private TPingPongClientToServer pingPong; //Questo servizio server per  controllare lo stato del server
 
 	//Dati necessari al collegamento col server
 	private String ipServer = "127.0.0.1";
@@ -87,55 +81,60 @@ public class Client {
 	private String username; //il nick scelto. utilizzato per la chat
 	
 	//variabili di controllo
-	private boolean IsStop=false; //definisce la fine del gioco
+	private boolean GameIsStop=false; //definisce la fine del gioco
 	private boolean IsConnet=false; //definisce la fine della connessione con un servizio
 	private boolean isPortCorrect=false; //definisce la disponibilita della porta scelta
 	private boolean errorUpdate = false;
 	
 	
+	private final String logPort = "logPorte.txt";
+	private final boolean Debug = false;
 	
 	
 	public Client()
 	{
+		final String idStampa="Client: ";
 		int lockPort = 0;
 		int lockPortChat = 0;
 		int lockPortPingPong = 0;
-		//file di log per non utilizzare le porte isate nella connessione
-		//precedente, utile per la riconnessione
-		try (BufferedReader readFile = new BufferedReader(new FileReader("logPorte.txt")))
+		
+		//per effettuare una riconnessione serve uno store delle porte utilizzate
+		//in modo da evitare di riprendere le stesse usate nella connessione precedente
+		try (BufferedReader readFile = new BufferedReader(new FileReader(logPort)))
 		{
 			lockPort = Integer.parseInt(readFile.readLine());
 			lockPortChat = Integer.parseInt(readFile.readLine());
 			lockPortPingPong = Integer.parseInt(readFile.readLine());
 			
 		} catch (IOException  e) {
-			System.err.println("-->il file non esiste "+e);
+			System.err.println(idStampa+"-->il file non esiste "+e);
 		}
 		
+		/*Connessione col server*/
 		try {
-			//Tentativo di connessione con server
 			socketClient = new Socket(ipServer, portServer);
 			IsConnet = true;
-			System.err.println("Server online!!");
+			System.err.println(idStampa+"Server online!!");
 		} catch (IOException e1) {
-			System.err.println("Server offline!!");
+			System.err.println(idStampa+"Server offline!!");
 		}
 		
 		if (!IsConnet)
 			return;
 		
-		//inizializzazione primo servizio
+		/*Inizializzazione servizio: comunicazione server-client */
 		while (!isPortCorrect)
 		{
 			try {
-				//sincronizzare i client!! potrebbe nascere dei problemi sulla porta!!
+				// todo: sincronizzare i client!! potrebbe nascere dei problemi sulla porta!!
 				if(port==lockPort)
 					port++;
 				socketServer = new ServerSocket(port);
 				isPortCorrect=true;
-				System.err.println("---> Servizio Attesa Turno Online sulla porta " +port);
+				System.err.println(idStampa+"---> Servizio Attesa Turno Online sulla porta " +port);
 			} catch (IOException e) {
-//				System.err.println("Porta Occupata "+ port +"!!Provane un'altra");
+				if(Debug)
+					System.err.println(idStampa+"Porta Occupata "+ port +"!!Provane un'altra");
 				if(port==9500)
 					return;
 				port++;
@@ -143,7 +142,7 @@ public class Client {
 			}
 		}
 		
-		//inizializzazione secondo servizio
+		/*Inizializzazione servizio: servizio di chat*/
 		isPortCorrect=false;
 		while (!isPortCorrect)
 		{
@@ -152,9 +151,10 @@ public class Client {
 					portChat++;
 				socketChat = new ServerSocket(portChat);
 				isPortCorrect=true;
-				System.err.println("---> Servizio Chat Online sulla porta " +portChat);
+				System.err.println(idStampa+"---> Servizio Chat Online sulla porta " +portChat);
 			} catch (IOException e) {
-//				System.err.println("Porta Occupata "+ portChat +"!!Provane un'altra");
+				if(Debug)
+					System.err.println(idStampa+"Porta Occupata "+ portChat +"!!Provane un'altra");
 				if(portChat==9500)
 					return;
 				portChat++;
@@ -162,7 +162,7 @@ public class Client {
 			}
 		}
 	
-		//inizializzazione terzo servizio
+		/*Inizializzazione servizio: servizio di pingPong*/
 		isPortCorrect=false;
 		while (!isPortCorrect)
 		{
@@ -171,19 +171,18 @@ public class Client {
 					portPingPong++;
 				socketPingPong = new ServerSocket(portPingPong);
 				isPortCorrect=true;
-				System.err.println("---> Servizio PingPong Online sulla porta " +portPingPong);
+				System.err.println(idStampa+"---> Servizio PingPong Online sulla porta " +portPingPong);
 			} catch (IOException e) {
-//				System.err.println("Porta Occupata "+ portPingPong +"!!Provane un'altra");
+				if(Debug)
+					System.err.println(idStampa+"Porta Occupata "+ portPingPong +"!!Provane un'altra");
 				if(portPingPong==9500)
 					return;
 				portPingPong++;
 				
 			}
 		}
-		
-		
-		threadPingPong = new ThreadPingPong();
-		pingPong = new PingPong(TempoPingPong);	
+		threadPingPong = new TPingPongServerToClinet();
+		pingPong = new TPingPongClientToServer(TempoPingPong);	
 	}
 	
 	
@@ -197,12 +196,13 @@ public class Client {
 	*/
 	private int Registrazione() 
 	{
-		System.err.println("----------InizioFaseRegistrazione----------------");
+		final String idStampa="Registrazione: ";
+		System.err.println(idStampa+"----------InizioFaseRegistrazione----------------");
 		
 		try {
 			socketClient.setSoTimeout(TempoRegistrazione);
 		} catch (SocketException e) {
-			System.err.println("Errore settaggio attesa client!!! " + e);
+			System.err.println(idStampa+"Errore settaggio attesa client!!! " + e);
 		}
 		
 		try (ObjectOutputStream outStream = new ObjectOutputStream(socketClient.getOutputStream());
@@ -214,14 +214,15 @@ public class Client {
 				
 				//Se non riconosco il primo messaggio del protocollp interrompo tutto (controllo)
 				if ( !((String) in.readObject()).equals(keyErrorCode.get(InizioRegistrazione.ordinal()) ))
-					throw new IllegalStateException("Stringa Errata");
+					throw new IllegalStateException("PrimoMessaggioInRegistrazioneErrato");
+				
 			}catch (ClassNotFoundException | IOException e) {
-				System.err.println("Errore messaggio apertura!! Riavviare il client!!" + e);
+				System.err.println(idStampa+"Errore messaggio apertura!! Riavviare il client!!" + e);
 				socketClient.close();
 				return -1;
 			}
 			
-			System.err.println("----InizioFaseIvioDati");
+			System.err.println(idStampa+"----InizioFaseIvioDati");
 			StartGame form = new StartGame(outStream,port,portChat,portPingPong,errorCode,keyErrorCode);
 			form.SetVisible();			
 			try {
@@ -230,61 +231,61 @@ public class Client {
 						!(response.equals(keyErrorCode.get(ConfermaAvvenutaRiconnessione.ordinal()))) )
 				{
 					form.SetError(errorCode.get(response));
-					System.err.println(errorCode.get(response));
+					System.err.println(idStampa+"codiceRisposta: "+errorCode.get(response));
 					if(	response.equals(keyErrorCode.get(GiocoIniziato.ordinal())) ||
 						response.equals(keyErrorCode.get(ServerPieno.ordinal()))  ||
 						response.equals(keyErrorCode.get(ErroreClientOnline.ordinal())))
 					{
 						form.SetIsConnect(false);
-						System.err.println("----FineFaseIvioDati");
+						System.err.println(idStampa+"----FineFaseIvioDati");
 						return -1;
 					}
 				}
 				
 				form.SetError(errorCode.get(response));
-				System.err.println(errorCode.get(response));
+				System.err.println(idStampa+"codiceRisposta: "+errorCode.get(response));
 				
 			} catch (SocketTimeoutException e)
 			{
-				System.err.println("Tempo Risposta Scaduto!! Riavviare il client!! "+ e);
+				System.err.println(idStampa+"Tempo Risposta Scaduto!! Riavviare il client!! "+ e);
 				form.SetError(errorCode.get(keyErrorCode.get(ServerNonRisponde.ordinal())));
 				form.SetIsConnect(false);
 				socketClient.close();
-				System.err.println("----FineFaseIvioDati");
+				System.err.println(idStampa+"----FineFaseIvioDati");
 				return -1;
 			} 
 			catch (ClassNotFoundException | IOException e1)
 			{
-				System.err.println("Errore messaggio conferma campi iscrizione!! Riavviare il client!! " + e1);
+				System.err.println(idStampa+"Errore messaggio conferma campi iscrizione!! Riavviare il client!! " + e1);
 				socketClient.close();
 				form.SetError(errorCode.get(keyErrorCode.get(ConnessioneAssente.ordinal())));
 				form.SetIsConnect(false);
-				System.err.println("----FineFaseIvioDati");
+				System.err.println(idStampa+"----FineFaseIvioDati");
 				return -1;
 			}
-			System.err.println("----FineFaseIvioDati");
+			System.err.println(idStampa+"----FineFaseIvioDati");
 			username=form.getUsername();
 		
 			try {
 				Thread.sleep(TemporizzazioneChiusuraForm);
 			} catch (InterruptedException e) {
-				System.err.println("Errore settaggio TemporizzazioneChiusuraForm" + e);
+				System.err.println(idStampa+"Errore settaggio TemporizzazioneChiusuraForm" + e);
 			}
 			form.Close();
 			socketClient.close();
 
 		} catch (Exception e) {
-			System.err.println("Errore apertura buffer O chiusura socket!! Riavviare il client!! " + e);
+			System.err.println(idStampa+"Errore apertura buffer O chiusura socket!! Riavviare il client!! " + e);
 			return -1;
 		}
 	
 		try {
 			socketClient.close();
 		} catch (Exception e) {
-			System.err.println("Errore chiusura socket!! Riavviare il client!!" + e);
+			System.err.println(idStampa+"Errore chiusura socket!! Riavviare il client!!" + e);
 			return -1;
 		}	
-		System.err.println("----------FineFaseRegistrazione----------------");
+		System.err.println(idStampa+"----------FineFaseRegistrazione----------------");
 		return 0;
 	}
 	
@@ -298,7 +299,8 @@ public class Client {
 	 */
 	private int inizializzazionePartita()
 	{
-		System.err.println("-----------------InizioFaseInizializzazionePartita---------------");
+		final String idStampa="InizializzazionePartita: ";
+		System.err.println(idStampa+"-----------------InizioFaseInizializzazionePartita---------------");
 		PosGraph posGraph;
 		try(Socket aggirnamentoSocket = socketServer.accept())
 		{
@@ -316,46 +318,49 @@ public class Client {
 					throw new IllegalAccessError((String) frtMessage+"--"+(String) inStream.readObject());
 				
 				mapGiocatoriInfo=(ConcurrentHashMap<String,InfoGiocatore>)frtMessage;
-//				System.err.println("*-*-*-*-*-*-*-*-*-*-*"+mapGiocatoriInfo.get(username).getPos());
-//				System.err.println("*-*-*-*-*-*-*-*-*-*-*"+mapGiocatoriInfo.get(username).getPunteggio());
-//				System.err.println("*-*-*-*-*-*-*-*-*-*-*"+mapGiocatoriInfo.get(username).getFazione());
+				if(Debug) 
+				{
+					System.err.println(idStampa+"mapGiocatoriInfo.get(username).getPos(): "+mapGiocatoriInfo.get(username).getPos());
+					System.err.println(idStampa+"mapGiocatoriInfo.get(username).getPunteggio()"+mapGiocatoriInfo.get(username).getPunteggio());
+					System.err.println(idStampa+"mapGiocatoriInfo.get(username).getFazione()"+mapGiocatoriInfo.get(username).getFazione());
+				}				
 				posGraph = (PosGraph)inStream.readObject();
 				listNomiCitta=(List<String>)inStream.readObject();
 				infoGraph=(InfoGraph)inStream.readObject();
 				outStream.writeObject(keyErrorCode.get(ConfermaAggiornamentoRicevuto.ordinal()));
 				if(!(boolean)inStream.readObject())
 				{
-					System.err.println("--->per il server non sei aggiornato");
+					System.err.println(idStampa+"--->per il server non sei aggiornato");
 					return ErroreInizializzazione.ordinal();
 				}
 				
 			}catch (SocketTimeoutException e) {
-				System.err.println("tempo aggiornamento finito, client non pronto a giocare " + e);
+				System.err.println(idStampa+"tempo aggiornamento finito, client non pronto a giocare " + e);
 				return ErroreInizializzazione.ordinal();
 			}catch (IOException e) {
-				System.err.println("Errore apertura buffer in / out " + e);
+				System.err.println(idStampa+"Errore apertura buffer in / out " + e);
 				e.printStackTrace();
 				return -1;
 			}
 		}catch (Exception e) {
-			System.err.println("Errore apertura socket " + e);
+			System.err.println(idStampa+"Errore apertura socket " + e);
 			e.printStackTrace();
 			return -1;
 		}
+		
 		//inizializzazione campo di gioco
 		DatiGraph datiGraph = new DatiGraph();
-		System.err.println("-->Creazione campo di gioco");
+		System.err.println(idStampa+"-->Creazione campo di gioco");
 		datiGraph.SetDatiGraph( posGraph.getListVertex(), null, posGraph.getListEdge(), infoGraph.getWidth(),
 								infoGraph.getHeight(), infoGraph.getLarghezzaX(), infoGraph.getLarghezzaY(), 
 								infoGraph.getDistanza(), infoGraph.getNVertex());
 		mxGraph mxGraph = new mxGraph();
 	    grafox  = new Grafox(datiGraph, mxGraph,listNomiCitta,mapGiocatoriInfo.get(username).getFazione(), errorCode.get(keyErrorCode.get(FazioneBuoni.ordinal())));
-	    System.err.println("-->Fine creazione campo di gioco");
-		System.err.println("-----------------FineFaseInizializzazionePartita---------------");
+	    System.err.println(idStampa+"-->Fine creazione campo di gioco");
+		System.err.println(idStampa+"-----------------FineFaseInizializzazionePartita---------------");
 		return 0;
 		
 	}
-	
 	/*
 	 * Questa fase corrisponde alla vera e propria partita
 	 * una volta qua, vuol dire che la partita è iniziata
@@ -365,9 +370,9 @@ public class Client {
 	 */
 	private void Game()
 	{
-		System.err.println("---> InizioGioco");
+		final String idStampa="Game: ";
+		System.err.println(idStampa+"---> InizioGioco");
 		
-
 		//Settaggio campo di battaglia
 		formDiGioco = new Game(ipServer,portServerChat,socketChat,username,grafox,mapGiocatoriInfo.get(username).getPos(),mapGiocatoriInfo.get(username).getFazione(),listNomiCitta,errorCode,keyErrorCode);
 		formDiGioco.upDateDatiPersonaliMunizioni(mapGiocatoriInfo.get(username).getPunteggio());
@@ -390,40 +395,39 @@ public class Client {
 		//Per consentire un aggirnamento rapido e "cosatante" delle 
 		//informazioni viene utilizzata un lista di thread i quali prendo
 		//il task e lo eseguono insieme ad altre fasi del gioco.
-		List<Thread> aggiornamneto = new LinkedList<>();
+		List<Thread> aggiornamnetiInCoda = new LinkedList<>();
 		TGioco tGioco = null;
-		TSfida sfid = null;
-		TAggiornamento agg;
+		TSfida tSfida = null;
+		TAggiornamento tAggiornamento;
 		
-		while(!IsStop)
+		while(!GameIsStop)
 		{
 			formDiGioco.setClassifica(mapGiocatoriInfo);
-			System.err.println("--------attesa Connessione.....");
+			System.err.println(idStampa+"attesa Connessione.....");
 			try 
 			{
 				Socket  partitaSocket = socketServer.accept();
 				//se sto giocando non ha senso pingare il server
 				pingPong.NotifyPingPong();
 				partitaSocket.setSoTimeout(TempoRispostaGame);	
-				System.err.println("--------Connessione.....");
+				System.err.println(idStampa+"Connessione.....");
 				try{
 						ObjectOutputStream outStream =  new ObjectOutputStream(partitaSocket.getOutputStream());
 						ObjectInputStream inStream = new ObjectInputStream(partitaSocket.getInputStream());
-						System.err.println("-------Scambio di messaggi ------");
+						System.err.println(idStampa+"Scambio di messaggi.....");
 						String comando =(String)inStream.readObject();						
 						
 						if(comando.equals(keyErrorCode.get(SfidaIniziata.ordinal())))
 						{
-							sfid = new TSfida(inStream, outStream,partitaSocket);
+							tSfida = new TSfida(inStream, outStream,partitaSocket);
 							formDiGioco.setFineTurno(false);
-							sfid.execute();
+							tSfida.execute();
 						}else
 							if (comando.equals(keyErrorCode.get(ConfermaInizioAggironamento.ordinal())))
 							{
-								agg = new TAggiornamento(inStream, outStream, partitaSocket);
-								aggiornamneto.add(agg);
-								aggiornamneto.get(aggiornamneto.size()-1).start();
-								
+								tAggiornamento = new TAggiornamento(inStream, outStream, partitaSocket);
+								aggiornamnetiInCoda.add(tAggiornamento);
+								aggiornamnetiInCoda.get(aggiornamnetiInCoda.size()-1).start();	
 							}else
 								if(comando.equals(keyErrorCode.get(ConfermaInizioTurno.ordinal())))
 								{
@@ -431,19 +435,19 @@ public class Client {
 									//degli aggiornamenti dei turni precedenti. Nel caso ci volesse 
 									//troppo il turno inizia lo stesso notificando pero' l'errore								
 									
-									System.err.println("-->attesa fine aggiornamento");
+									System.err.println(idStampa+"-->attesa fine aggiornamento");
 									
 									//variabile d'appoggio usata per 
 									//la segnalazione di un errore in 
 									//fase di aggiornamento
 									errorUpdate = false;
 									
-									for (Thread thread : aggiornamneto) 
+									for (Thread thread : aggiornamnetiInCoda) 
 									{
 										try {
 											thread.join(TemporizzatoreAttesaFineAggiornamento);
 										} catch (InterruptedException e) {
-											System.err.println("-->Errore durante l'aggiornamento!!Task cancellato "+e);
+											System.err.println(idStampa+"-->Errore durante l'aggiornamento!!Task cancellato "+e);
 											errorUpdate=true;
 										}
 									}
@@ -451,17 +455,17 @@ public class Client {
 									if(errorUpdate)
 										JOptionPane.showMessageDialog(null,"Errore aggiornamento");
 									else
-										aggiornamneto.clear();
-									System.err.println("-->fine aggiornamento");
+										aggiornamnetiInCoda.clear();
+									System.err.println(idStampa+"-->fine aggiornamento");
 									//in alcuni casi viene interro il gioco... 
 									//se inizia il turno e la sfida non è conclusa
 									
-									if (sfid !=null && !sfid.isDone() && !sfid.isStop())
-										throw new IllegalStateException("Il client vuole volgere giocare durante una sfida");
+									if (tSfida !=null && !tSfida.isDone() && !tSfida.isStop())
+										throw new IllegalStateException("Il client vuole giocare durante una sfida");
 									
 									//o se il tuo turno è gia in corso
 									if (tGioco !=null &&  !tGioco.isDone())
-										throw new IllegalStateException("Il client vuole volgere due turni contemporaneamente");
+										throw new IllegalStateException("Il client vuole giocare due turni contemporaneamente");
 									else
 									{
 										tGioco = new TGioco(inStream, outStream, partitaSocket);	
@@ -469,18 +473,18 @@ public class Client {
 									}
 								}	
 					} catch (IOException | ClassNotFoundException e ) {
-						System.err.println("Errore aperturn in/out!!! " + e);
+						System.err.println(idStampa+"Errore aperturn in/out!!! " + e);
 						e.printStackTrace();
 					}			
 			} catch (IOException e) {
-				System.err.println("Errore accetta connessione!!!Chiusra Client!!!IDK (Possibile fine turno): "+e);
+				System.err.println(idStampa+"Errore accetta connessione!!!Chiusra Client!!!IDK (Possibile fine turno): "+e);
 			}	
 		}
-		System.err.println("--->Fine Gioco");
+		System.err.println(idStampa+"--->Fine Gioco");
 		try {
 			socketServer.close();
 		} catch (IOException e) {
-			System.err.println("Chiusura socket!!!! Errore");
+			System.err.println(idStampa+"Chiusura socket!!!! Errore");
 		}
 		
 	}
@@ -492,6 +496,7 @@ public class Client {
 	*/
 	public void Start()
 	{
+		final String idStampa="Start: ";
 		//Il gioco puo partire solo se sono connesso
 		//ed ho inizializzato tutti i servizi
 		if (IsConnet && isPortCorrect)
@@ -512,7 +517,7 @@ public class Client {
 				
 			} catch (IOException e) {
 				
-				System.err.println("-->il file non esiste "+e);
+				System.err.println(idStampa+"-->il file non esiste "+e);
 			}
 			
 			pingPong.start();
@@ -545,7 +550,7 @@ public class Client {
 		}
 		else
 		{
-			System.err.println("-->ErroreCollegamentoColServer O ImpossibileAprireIServiziNecessari");
+			System.err.println(idStampa+"-->ErroreCollegamentoColServer O ImpossibileAprireIServiziNecessari");
 			JOptionPane.showMessageDialog(null,"ErroreCollegamentoColServer O ImpossibileAprireIServiziNecessari");
 		}
 		
@@ -558,8 +563,9 @@ public class Client {
 	//Viene chiama in caso di fine gioco (sia normale che non)
 	private void StopGame()
 	{
-		System.err.println("--->STOP---GAME<---");		
-		if (IsStop)
+		final String idStampa="StopGame: ";
+		System.err.println(idStampa+"--->STOP---GAME<---");		
+		if (GameIsStop)
 			return;
 		
 		if(formDiGioco!=null && formDiGioco.isActive())
@@ -569,18 +575,18 @@ public class Client {
 			sfida.close();
 		
 		try {
-			IsStop=true;
+			GameIsStop=true;
 			socketServer.close();
 		} catch (IOException e) {
-			System.err.println("errore chiusura socketServer");
+			System.err.println(idStampa+"errore chiusura socketServer");
 		}
 
 
 		if(threadPingPong.isAlive())
 			try(Socket socketChiusura = new Socket("127.0.0.1", portPingPong)) {
-				System.err.println("-->threadPingPong terminato");
+				System.err.println(idStampa+"-->threadPingPong terminato");
 			} catch (IOException e) {
-				System.err.println("errore terminazione threadPingPong");
+				System.err.println(idStampa+"errore terminazione threadPingPong");
 			}
 	}
 	
@@ -588,13 +594,14 @@ public class Client {
 	//Questo servizio di pingPong server 
 	//per capire se il server è online nelle 
 	//fasi "morte" del gioco.
-	class PingPong extends Thread
+	class TPingPongClientToServer extends Thread
 	{
 		private boolean isConnect;
 		private int timer;
 		
 		
-		PingPong(int timer)
+		
+		TPingPongClientToServer(int timer)
 		{
 			isConnect=true;
 			this.timer = timer;
@@ -618,16 +625,18 @@ public class Client {
 		//nel caso il server contatti per qualche motivo il client
 		public synchronized void NotifyPingPong()
 		{
+			final String idStampa="PingPong,NotifyPingPong: ";
 			isConnect=true;
-			System.err.println("server online");
+			System.err.println(idStampa+"server online");
 			this.notify();
 		}
 		
 		@Override
 		public synchronized void run()
 		{
-			System.err.println("--->INIZIO SERVIZIO PINGPONG<---");
-			while(!IsStop)
+			final String idStampa="PingPong,run: ";
+			System.err.println(idStampa+"--->INIZIO SERVIZIO PINGPONG<---");
+			while(!GameIsStop)
 			{
 				while(isConnect)
 				{
@@ -635,11 +644,11 @@ public class Client {
 					try {
 						this.wait(timer);
 					} catch (InterruptedException e) {
-						System.err.println("Errore attera pingPong client");
+						System.err.println(idStampa+"Errore attera pingPong client");
 					}
 				}
 				
-				if(IsStop)
+				if(GameIsStop)
 					return;
 				
 				try(Socket pingPong = new Socket(ipServer, portServerPingPong);
@@ -649,21 +658,21 @@ public class Client {
 					String cod = (String)inStreamPingPong.readObject();
 					if (cod.equals(keyErrorCode.get(ServerOnline.ordinal())))
 					{
-						System.err.println(errorCode.get(cod));
+						System.err.println(idStampa+"ErrorCode "+errorCode.get(cod));
 						isConnect=true;
 					}
 					else
 					{
-						System.err.println("server offline");
+						System.err.println(idStampa+"server offline");
 						StopGame();
 					}
 				} catch (Exception e) {
-					System.err.println("server offline");
+					System.err.println(idStampa+"server offline");
 					StopGame();
 				}
 
 			}
-			System.err.println("--->FINE SERVIZIO PINGPONG<---");
+			System.err.println(idStampa+"--->FINE SERVIZIO PINGPONG<---");
 		}
 	}
 	
@@ -672,18 +681,22 @@ public class Client {
 	//In questo caso è il server che mi conttatta e tramite un analisi dei 
 	//dati ricevuti capisco se è lui o meno.
 	//in caso affermatico segnalo al server che sono online
-	class ThreadPingPong extends Thread 
+	class TPingPongServerToClinet extends Thread 
 	{
+		private final String idStampa="ThreadPingPong,run: ";
 		@Override
 		public void run() 
 		{
-			System.err.println("--->INIZIO SERVIZIO THREADPINGPONG<---");
-			while(!IsStop)
+			System.err.println(idStampa+"--->INIZIO SERVIZIO THREADPINGPONG<---");
+			while(!GameIsStop)
 			{
 				try (Socket temp = socketPingPong.accept())
 				{		
-//					System.err.println("-----> ipConnessione :	 "+temp.getInetAddress());
-//					System.err.println("-----> ipServer      :	 "+ipServer);
+					if(Debug)
+					{
+						System.err.println(idStampa+"-----> ipConnessione :	 "+temp.getInetAddress());
+						System.err.println(idStampa+"-----> ipServer      :	 "+ipServer);
+					}
 					if (String.valueOf(temp.getInetAddress()).substring(1).equals(ipServer))
 					{
 						try(ObjectOutputStream outStreamPingPong = new ObjectOutputStream(temp.getOutputStream()))
@@ -691,14 +704,14 @@ public class Client {
 							outStreamPingPong.writeObject(keyErrorCode.get(ClientOnline.ordinal()));
 							Thread.sleep(TemporizzatoreThreadPingPong);
 						}catch (IOException | InterruptedException e){
-							System.err.println("errore outStreamPingPong  " + e);
+							System.err.println(idStampa+"errore outStreamPingPong  " + e);
 						}
 					}
 				} catch (IOException e) {
-				System.err.println("errore socketPingPong " + e);
+				System.err.println(idStampa+"errore socketPingPong " + e);
 				}
 			}
-			System.err.println("--->FINE SERVIZIO THREADPINGPONG<---");
+			System.err.println(idStampa+"--->FINE SERVIZIO THREADPINGPONG<---");
 		}
 	}
 	
@@ -717,6 +730,7 @@ public class Client {
 		private ObjectInputStream inStreamTGioco;
 		private ObjectOutputStream outStreamTGioco;
 		private Socket partitaSocketTGioco;
+		private final String idStampa = "TGioco,doInBackground: ";
 		
 		public TGioco(ObjectInputStream inStream,ObjectOutputStream outStream,Socket partitaSocket)
 		{
@@ -731,7 +745,7 @@ public class Client {
 			try
 			{
 				formDiGioco.resetError();
-				System.err.println("--->"+errorCode.get(keyErrorCode.get(InizioTurno.ordinal()))+" : "+username);
+				System.err.println(idStampa+"--->"+errorCode.get(keyErrorCode.get(InizioTurno.ordinal()))+" : "+username);
 				formDiGioco.upDateError1(errorCode.get(keyErrorCode.get(InizioTurno.ordinal()))+username);
 				formDiGioco.SetEnable();
 				System.out.println((String)inStreamTGioco.readObject());
@@ -746,7 +760,6 @@ public class Client {
 						formDiGioco.upDateError1("Giocatore non è nella tua stessa citta\n");
 						formDiGioco.setFineTurno(true);
 						sfida.close();
-						
 					}
 					else
 						if(comando.equals(keyErrorCode.get(SfidaIniziata.ordinal())))
@@ -759,7 +772,7 @@ public class Client {
 								partitaSocketTGioco.setSoTimeout(TempoSfida);
 								while (!( comando =(String)inStreamTGioco.readObject()).equals((keyErrorCode.get(FineSfida.ordinal())) ))
 								{
-									System.err.println("ComandoRicevto -->"+comando);
+									System.err.println(idStampa+"ComandoRicevto -->"+comando);
 									formDiGioco.upDateError1(errorCode.get(comando));
 									if( !comando.equals(keyErrorCode.get(HaiVinto.ordinal())) && !comando.equals(keyErrorCode.get(HaiPerso.ordinal())) && !comando.equals(keyErrorCode.get(PareggioFineMosse.ordinal())))
 										sfida.EnableAll();
@@ -767,9 +780,9 @@ public class Client {
 										publish(comando);
 									
 								}
-								System.err.println("ComandoRicevto -->"+comando);
+								System.err.println(idStampa+"ComandoRicevto -->"+comando);
 							}catch (IOException | ClassNotFoundException e){
-								System.err.println("sfida attaccante" + e);
+								System.err.println(idStampa+"sfida attaccante" + e);
 							}finally {
 								formDiGioco.upDateError1(errorCode.get(keyErrorCode.get(FineSfida.ordinal())));
 								formDiGioco.setFineTurno(true);
@@ -780,12 +793,14 @@ public class Client {
 					//gestione altri comandi
 					if (comando.equals(keyErrorCode.get(ConfermaComandoRicevuto.ordinal())) )
 					{
-//						System.err.println("*-*-*-*-*/*/*/*/*/*-"+mapGiocatoriInfo.get(username).getPos());
+						if(Debug)
+							System.err.println(idStampa+mapGiocatoriInfo.get(username).getPos());
 						if(!mapGiocatoriInfo.get(username).getPos().equals(formDiGioco.NewPosCitta()))
 						{
 							mapGiocatoriInfo.get(username).setPos(formDiGioco.NewPosCitta());
-//							System.err.println("*-*-*-*-*/*/*/*/*/*-"+mapGiocatoriInfo.get(username).getPos());
-							System.err.println(comando);
+							if(Debug)
+								System.err.println(idStampa+mapGiocatoriInfo.get(username).getPos());
+							System.err.println(idStampa+"comando: "+comando);
 							List<String> app = new LinkedList<>();
 							for (String user : mapGiocatoriInfo.keySet()) 
 							{
@@ -794,33 +809,32 @@ public class Client {
 										app.add(user+" ["+mapGiocatoriInfo.get(user).getFazione().charAt(0)+mapGiocatoriInfo.get(user).getFazione().charAt(8)+"]");
 							}
 							formDiGioco.upDataGiocatori(app);
-//							System.err.println(mapGiocatoriInfo.get(username).getPos()+"-------------***-------------------------");
+							if(Debug)
+								System.err.println(idStampa+mapGiocatoriInfo.get(username).getPos());
 						}
 					}
 				}
 				
 				
-				System.out.println("ComandoRicevto -->"+errorCode.get(comando));
+				System.err.println(idStampa+"ComandoRicevto -->"+errorCode.get(comando));
 				inStreamTGioco.close();
 				outStreamTGioco.close();
 				partitaSocketTGioco.close();
 				formDiGioco.SetDisable();
 				
 			}catch(IOException | ClassNotFoundException e){
-				System.err.println("Errore Lettura Comando Mossa/Aggiornamento!!!" + e);		
+				System.err.println(idStampa+"Errore Lettura Comando Mossa/Aggiornamento!!!" + e);		
 			}
 			finally 
 			{
-				if(!IsStop)
+				if(!GameIsStop)
 				{
 					formDiGioco.SetDisable();
 					formDiGioco.upDateError1(errorCode.get(keyErrorCode.get(ComandoFineTurno.ordinal())));
 				}
-					
 			}
 			return null;
 		}
-		
 		
 		@Override
 		protected void process(List<String> chunks) {
@@ -838,6 +852,7 @@ public class Client {
 		ObjectInputStream inStreamTSfida;
 		ObjectOutputStream outStreamTSfida;
 		Socket partitaSocketTSfida;
+		private final String idStampa="TSfida,doInBackground: ";
 		
 		public TSfida(ObjectInputStream inStream,ObjectOutputStream outStream,Socket partitaSocket)
 		{
@@ -859,23 +874,22 @@ public class Client {
 				partitaSocketTSfida.setSoTimeout(TempoSfida);
 				while (!( comando =(String)inStreamTSfida.readObject()).equals((keyErrorCode.get(FineSfida.ordinal())) ))
 				{
-					System.err.println("ComandoRicevto -->"+comando);
+					System.err.println(idStampa+"ComandoRicevto -->"+comando);
 					formDiGioco.upDateError1(errorCode.get(comando));
 					if( !comando.equals(keyErrorCode.get(HaiVinto.ordinal())) && !comando.equals(keyErrorCode.get(HaiPerso.ordinal())) && !comando.equals(keyErrorCode.get(PareggioFineMosse.ordinal())) )
 						sfida.EnableAll();
 					else
 						publish(comando);
 				}
-				System.err.println("ComandoRicevto -->"+comando);
+				System.err.println(idStampa+"ComandoRicevto -->"+comando);
 				formDiGioco.upDateError1(errorCode.get(comando));
 				inStreamTSfida.close();
 				outStreamTSfida.close();
 				partitaSocketTSfida.close();
 			}catch(IOException | ClassNotFoundException e){
-				System.err.println("Sfida sfidante" + e);
+				System.err.println(idStampa+"Sfida sfidante" + e);
 			}finally {
 				sfida.close();
-				
 				formDiGioco.upDateError1(errorCode.get(keyErrorCode.get(FineSfida.ordinal())));
 			}
 			
@@ -901,7 +915,7 @@ public class Client {
 		ObjectInputStream inStreamTAggiornamento;
 		ObjectOutputStream outStreamTAggiornamento;
 		Socket partitaSocketTAggiornamento;
-		
+		private final String idStampa="TAggiornamento,run: ";
 		public TAggiornamento(ObjectInputStream inStream,ObjectOutputStream outStream,Socket partitaSocket)
 		{
 			this.inStreamTAggiornamento=inStream;
@@ -916,7 +930,7 @@ public class Client {
 			String aggiornamento;
 			try {
 				aggiornamento = (String)inStreamTAggiornamento.readObject();
-				System.err.println("Aggiornamento -->" + aggiornamento);
+				System.err.println(idStampa+"Aggiornamento -->" + aggiornamento);
 				
 				//variabile di appoggio per analizzare il contenuto dell'aggiornamento
 				String[] temp = aggiornamento.split(",");
@@ -994,7 +1008,7 @@ public class Client {
 				outStreamTAggiornamento.close();
 				partitaSocketTAggiornamento.close();
 			} catch (ClassNotFoundException | IOException e) {
-				System.err.println("Errore fase di aggiornamento " +e);
+				System.err.println(idStampa+"Errore fase di aggiornamento " +e);
 			}
 			
 		}
