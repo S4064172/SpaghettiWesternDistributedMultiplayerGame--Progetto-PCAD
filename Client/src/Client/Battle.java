@@ -68,6 +68,8 @@ public class Battle extends JFrame implements ActionListener{
 	private boolean IsStop;
 	private Random randomGenerate = new Random();
 	
+	private final boolean Debug = false;
+	private final String ClassName = this.getClass().getName();
 	
 	public int getNMunizioni()
 	{
@@ -179,15 +181,19 @@ public class Battle extends JFrame implements ActionListener{
 
 	private void DisableAll()
 	{
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String printId=ClassName+","+MethodName+": ";
 		if (attesaRisposta)
 			return;
-//		System.err.println("-----------------------Disattivo--------------------------------");
+		if(Debug)
+			System.err.println(printId+"-----------------------Disattivo--------------------------------");
 		attesaRisposta=true;
 		statoPrec = new boolean[3];
 		statoPrec[0]=Difendi.isEnabled();
 		statoPrec[1]=Ricarica.isEnabled();
 		statoPrec[2]=Attacca.isEnabled();
-//		System.err.println("/*-/*-/*--*/-*/"+statoPrec[0]+statoPrec[1]+statoPrec[2]);
+		if(Debug)
+			System.err.println(printId+"StatiPrec: "+statoPrec[0]+statoPrec[1]+statoPrec[2]);
 		Difendi.setEnabled(false);
 		Ricarica.setEnabled(false);
 		Attacca.setEnabled(false);
@@ -195,14 +201,19 @@ public class Battle extends JFrame implements ActionListener{
 	
 	public void EnableAll()
 	{
-//		System.err.println("--------------------------Attivo-----------------------------");
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String printId=ClassName+","+MethodName+": ";
+		if(Debug)
+			System.err.println(printId+"--------------------------Attivo-----------------------------");
 		if(statoPrec==null)
 			return;
-//		System.err.println("/*-/*-/*--*/-*/"+statoPrec[0]+statoPrec[1]+statoPrec[2]);
+		if(Debug)
+			System.err.println(printId+"StatiPrec: "+statoPrec[0]+statoPrec[1]+statoPrec[2]);
 		Difendi.setEnabled(statoPrec[0]);
 		Ricarica.setEnabled(statoPrec[1]);
 		Attacca.setEnabled(statoPrec[2]);
-//		System.err.println("/*-/*-/*--*/-*/"+Difendi.isEnabled()+Ricarica.isEnabled()+Attacca.isEnabled());
+		if(Debug)
+			System.err.println(printId+"Stati.isEmable: "+Difendi.isEnabled()+Ricarica.isEnabled()+Attacca.isEnabled());
 		if (Difendi.isEnabled()!=statoPrec[0])
 			throw new IllegalAccessError();
 		if (Ricarica.isEnabled()!=statoPrec[1])
@@ -278,7 +289,7 @@ public class Battle extends JFrame implements ActionListener{
 	{
 		private boolean timeOut;
 		private int timer;
-		
+		private final String SubClassName= this.getClass().getName();
 		
 		Timer(int timer)
 		{
@@ -291,12 +302,14 @@ public class Battle extends JFrame implements ActionListener{
 		}
 
 		public synchronized void setConnect(boolean timeOut) {
-			this.timeOut = timeOut;
+			this.timeOut = timeOut; 
 		}
 		
 		public synchronized void NotifyTimerClose()
 		{
-			System.err.println("-->SfidaInterrotto");
+			final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+			final String printId=ClassName+"-"+SubClassName+","+MethodName+": ";
+			System.err.println(printId+"-->SfidaInterrotto");
 			this.notify();
 			this.interrupt();
 		}
@@ -311,17 +324,19 @@ public class Battle extends JFrame implements ActionListener{
 		@Override
 		public synchronized void run()
 		{
-
+			final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+			final String printId=ClassName+"-"+SubClassName+","+MethodName+": ";
 			while(!IsStop)
 			{	
-//				System.err.println("---->TimeOut :"+timeOut);
+				if(Debug)
+					System.err.println(printId+"---->TimeOut :"+timeOut);
 				while(timeOut)
 				{
 					timeOut=false;
 					try {
 						this.wait(timer);
 					} catch (InterruptedException e) {
-						System.err.println("-->errore wait mossa forzata");
+						System.err.println(printId+"-->errore wait mossa forzata");
 					}
 				}	
 				if (!IsStop)
@@ -381,7 +396,7 @@ public class Battle extends JFrame implements ActionListener{
 									+"\n"+	errorCode.get(keyErrorCode.get(NumDifesa.ordinal()))+" : "+nDifesa
 									+"\n"+errorCode.get(keyErrorCode.get(NumRicaricate.ordinal()))+" : "+nRicaricate);
 							timeOutScelta.NotifyTimer();
-							System.err.println("-->scelata automatica"+tempScelte.get(scelta));
+							System.err.println(printId+"-->scelata automatica"+tempScelte.get(scelta));
 							new SendComando(tempScelte.get(scelta)).execute();
 						}
 						else
@@ -397,17 +412,19 @@ public class Battle extends JFrame implements ActionListener{
 	class SendComando extends SwingWorker<String, String>
 	{
 		private String comando;
-		
+		private final String SubClassName = this.getClass().getName();
 		public SendComando(String comando) {
 			this.comando=comando;
 		}
 		@Override
 		protected String doInBackground()
 		{
+			final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+			final String printId=ClassName+"-"+SubClassName+","+MethodName+": ";
 			try {
 				outStream.writeObject(comando);
 			} catch (IOException e) {
-				System.err.println("Errore invio comando");
+				System.err.println(printId+"Errore invio comando");
 			}
 			return null;
 		}

@@ -89,11 +89,13 @@ public class Client {
 	
 	private final String logPort = "logPorte.txt";
 	private final boolean Debug = false;
+	private final String ClassName = this.getClass().getName();
 	
 	
 	public Client()
 	{
-		final String idStampa="Client: ";
+		
+		final String idStampa=ClassName+","+ClassName+" ";
 		int lockPort = 0;
 		int lockPortChat = 0;
 		int lockPortPingPong = 0;
@@ -196,13 +198,14 @@ public class Client {
 	*/
 	private int Registrazione() 
 	{
-		final String idStampa="Registrazione: ";
-		System.err.println(idStampa+"----------InizioFaseRegistrazione----------------");
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String PrintId=ClassName+","+MethodName+": ";
+		System.err.println(PrintId+"----------InizioFaseRegistrazione----------------");
 		
 		try {
 			socketClient.setSoTimeout(TempoRegistrazione);
 		} catch (SocketException e) {
-			System.err.println(idStampa+"Errore settaggio attesa client!!! " + e);
+			System.err.println(PrintId+"Errore settaggio attesa client!!! " + e);
 		}
 		
 		try (ObjectOutputStream outStream = new ObjectOutputStream(socketClient.getOutputStream());
@@ -217,12 +220,12 @@ public class Client {
 					throw new IllegalStateException("PrimoMessaggioInRegistrazioneErrato");
 				
 			}catch (ClassNotFoundException | IOException e) {
-				System.err.println(idStampa+"Errore messaggio apertura!! Riavviare il client!!" + e);
+				System.err.println(PrintId+"Errore messaggio apertura!! Riavviare il client!!" + e);
 				socketClient.close();
 				return -1;
 			}
 			
-			System.err.println(idStampa+"----InizioFaseIvioDati");
+			System.err.println(PrintId+"----InizioFaseIvioDati");
 			StartGame form = new StartGame(outStream,port,portChat,portPingPong,errorCode,keyErrorCode);
 			form.SetVisible();			
 			try {
@@ -231,61 +234,61 @@ public class Client {
 						!(response.equals(keyErrorCode.get(ConfermaAvvenutaRiconnessione.ordinal()))) )
 				{
 					form.SetError(errorCode.get(response));
-					System.err.println(idStampa+"codiceRisposta: "+errorCode.get(response));
+					System.err.println(PrintId+"codiceRisposta: "+errorCode.get(response));
 					if(	response.equals(keyErrorCode.get(GiocoIniziato.ordinal())) ||
 						response.equals(keyErrorCode.get(ServerPieno.ordinal()))  ||
 						response.equals(keyErrorCode.get(ErroreClientOnline.ordinal())))
 					{
 						form.SetIsConnect(false);
-						System.err.println(idStampa+"----FineFaseIvioDati");
+						System.err.println(PrintId+"----FineFaseIvioDati");
 						return -1;
 					}
 				}
 				
 				form.SetError(errorCode.get(response));
-				System.err.println(idStampa+"codiceRisposta: "+errorCode.get(response));
+				System.err.println(PrintId+"codiceRisposta: "+errorCode.get(response));
 				
 			} catch (SocketTimeoutException e)
 			{
-				System.err.println(idStampa+"Tempo Risposta Scaduto!! Riavviare il client!! "+ e);
+				System.err.println(PrintId+"Tempo Risposta Scaduto!! Riavviare il client!! "+ e);
 				form.SetError(errorCode.get(keyErrorCode.get(ServerNonRisponde.ordinal())));
 				form.SetIsConnect(false);
 				socketClient.close();
-				System.err.println(idStampa+"----FineFaseIvioDati");
+				System.err.println(PrintId+"----FineFaseIvioDati");
 				return -1;
 			} 
 			catch (ClassNotFoundException | IOException e1)
 			{
-				System.err.println(idStampa+"Errore messaggio conferma campi iscrizione!! Riavviare il client!! " + e1);
+				System.err.println(PrintId+"Errore messaggio conferma campi iscrizione!! Riavviare il client!! " + e1);
 				socketClient.close();
 				form.SetError(errorCode.get(keyErrorCode.get(ConnessioneAssente.ordinal())));
 				form.SetIsConnect(false);
-				System.err.println(idStampa+"----FineFaseIvioDati");
+				System.err.println(PrintId+"----FineFaseIvioDati");
 				return -1;
 			}
-			System.err.println(idStampa+"----FineFaseIvioDati");
+			System.err.println(PrintId+"----FineFaseIvioDati");
 			username=form.getUsername();
 		
 			try {
 				Thread.sleep(TemporizzazioneChiusuraForm);
 			} catch (InterruptedException e) {
-				System.err.println(idStampa+"Errore settaggio TemporizzazioneChiusuraForm" + e);
+				System.err.println(PrintId+"Errore settaggio TemporizzazioneChiusuraForm" + e);
 			}
 			form.Close();
 			socketClient.close();
 
 		} catch (Exception e) {
-			System.err.println(idStampa+"Errore apertura buffer O chiusura socket!! Riavviare il client!! " + e);
+			System.err.println(PrintId+"Errore apertura buffer O chiusura socket!! Riavviare il client!! " + e);
 			return -1;
 		}
 	
 		try {
 			socketClient.close();
 		} catch (Exception e) {
-			System.err.println(idStampa+"Errore chiusura socket!! Riavviare il client!!" + e);
+			System.err.println(PrintId+"Errore chiusura socket!! Riavviare il client!!" + e);
 			return -1;
 		}	
-		System.err.println(idStampa+"----------FineFaseRegistrazione----------------");
+		System.err.println(PrintId+"----------FineFaseRegistrazione----------------");
 		return 0;
 	}
 	
@@ -299,8 +302,9 @@ public class Client {
 	 */
 	private int inizializzazionePartita()
 	{
-		final String idStampa="InizializzazionePartita: ";
-		System.err.println(idStampa+"-----------------InizioFaseInizializzazionePartita---------------");
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String PrintId=ClassName+","+MethodName+": ";
+		System.err.println(PrintId+"-----------------InizioFaseInizializzazionePartita---------------");
 		PosGraph posGraph;
 		try(Socket aggirnamentoSocket = socketServer.accept())
 		{
@@ -320,9 +324,9 @@ public class Client {
 				mapGiocatoriInfo=(ConcurrentHashMap<String,InfoGiocatore>)frtMessage;
 				if(Debug) 
 				{
-					System.err.println(idStampa+"mapGiocatoriInfo.get(username).getPos(): "+mapGiocatoriInfo.get(username).getPos());
-					System.err.println(idStampa+"mapGiocatoriInfo.get(username).getPunteggio()"+mapGiocatoriInfo.get(username).getPunteggio());
-					System.err.println(idStampa+"mapGiocatoriInfo.get(username).getFazione()"+mapGiocatoriInfo.get(username).getFazione());
+					System.err.println(PrintId+"mapGiocatoriInfo.get(username).getPos(): "+mapGiocatoriInfo.get(username).getPos());
+					System.err.println(PrintId+"mapGiocatoriInfo.get(username).getPunteggio()"+mapGiocatoriInfo.get(username).getPunteggio());
+					System.err.println(PrintId+"mapGiocatoriInfo.get(username).getFazione()"+mapGiocatoriInfo.get(username).getFazione());
 				}				
 				posGraph = (PosGraph)inStream.readObject();
 				listNomiCitta=(List<String>)inStream.readObject();
@@ -330,34 +334,34 @@ public class Client {
 				outStream.writeObject(keyErrorCode.get(ConfermaAggiornamentoRicevuto.ordinal()));
 				if(!(boolean)inStream.readObject())
 				{
-					System.err.println(idStampa+"--->per il server non sei aggiornato");
+					System.err.println(PrintId+"--->per il server non sei aggiornato");
 					return ErroreInizializzazione.ordinal();
 				}
 				
 			}catch (SocketTimeoutException e) {
-				System.err.println(idStampa+"tempo aggiornamento finito, client non pronto a giocare " + e);
+				System.err.println(PrintId+"tempo aggiornamento finito, client non pronto a giocare " + e);
 				return ErroreInizializzazione.ordinal();
 			}catch (IOException e) {
-				System.err.println(idStampa+"Errore apertura buffer in / out " + e);
+				System.err.println(PrintId+"Errore apertura buffer in / out " + e);
 				e.printStackTrace();
 				return -1;
 			}
 		}catch (Exception e) {
-			System.err.println(idStampa+"Errore apertura socket " + e);
+			System.err.println(PrintId+"Errore apertura socket " + e);
 			e.printStackTrace();
 			return -1;
 		}
 		
 		//inizializzazione campo di gioco
 		DatiGraph datiGraph = new DatiGraph();
-		System.err.println(idStampa+"-->Creazione campo di gioco");
+		System.err.println(PrintId+"-->Creazione campo di gioco");
 		datiGraph.SetDatiGraph( posGraph.getListVertex(), null, posGraph.getListEdge(), infoGraph.getWidth(),
 								infoGraph.getHeight(), infoGraph.getLarghezzaX(), infoGraph.getLarghezzaY(), 
 								infoGraph.getDistanza(), infoGraph.getNVertex());
 		mxGraph mxGraph = new mxGraph();
 	    grafox  = new Grafox(datiGraph, mxGraph,listNomiCitta,mapGiocatoriInfo.get(username).getFazione(), errorCode.get(keyErrorCode.get(FazioneBuoni.ordinal())));
-	    System.err.println(idStampa+"-->Fine creazione campo di gioco");
-		System.err.println(idStampa+"-----------------FineFaseInizializzazionePartita---------------");
+	    System.err.println(PrintId+"-->Fine creazione campo di gioco");
+		System.err.println(PrintId+"-----------------FineFaseInizializzazionePartita---------------");
 		return 0;
 		
 	}
@@ -370,8 +374,9 @@ public class Client {
 	 */
 	private void Game()
 	{
-		final String idStampa="Game: ";
-		System.err.println(idStampa+"---> InizioGioco");
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String PrintId=ClassName+","+MethodName+": ";
+		System.err.println(PrintId+"---> InizioGioco");
 		
 		//Settaggio campo di battaglia
 		formDiGioco = new Game(ipServer,portServerChat,socketChat,username,grafox,mapGiocatoriInfo.get(username).getPos(),mapGiocatoriInfo.get(username).getFazione(),listNomiCitta,errorCode,keyErrorCode);
@@ -403,18 +408,18 @@ public class Client {
 		while(!GameIsStop)
 		{
 			formDiGioco.setClassifica(mapGiocatoriInfo);
-			System.err.println(idStampa+"attesa Connessione.....");
+			System.err.println(PrintId+"attesa Connessione.....");
 			try 
 			{
 				Socket  partitaSocket = socketServer.accept();
 				//se sto giocando non ha senso pingare il server
 				pingPong.NotifyPingPong();
 				partitaSocket.setSoTimeout(TempoRispostaGame);	
-				System.err.println(idStampa+"Connessione.....");
+				System.err.println(PrintId+"Connessione.....");
 				try{
 						ObjectOutputStream outStream =  new ObjectOutputStream(partitaSocket.getOutputStream());
 						ObjectInputStream inStream = new ObjectInputStream(partitaSocket.getInputStream());
-						System.err.println(idStampa+"Scambio di messaggi.....");
+						System.err.println(PrintId+"Scambio di messaggi.....");
 						String comando =(String)inStream.readObject();						
 						
 						if(comando.equals(keyErrorCode.get(SfidaIniziata.ordinal())))
@@ -435,7 +440,7 @@ public class Client {
 									//degli aggiornamenti dei turni precedenti. Nel caso ci volesse 
 									//troppo il turno inizia lo stesso notificando pero' l'errore								
 									
-									System.err.println(idStampa+"-->attesa fine aggiornamento");
+									System.err.println(PrintId+"-->attesa fine aggiornamento");
 									
 									//variabile d'appoggio usata per 
 									//la segnalazione di un errore in 
@@ -447,7 +452,7 @@ public class Client {
 										try {
 											thread.join(TemporizzatoreAttesaFineAggiornamento);
 										} catch (InterruptedException e) {
-											System.err.println(idStampa+"-->Errore durante l'aggiornamento!!Task cancellato "+e);
+											System.err.println(PrintId+"-->Errore durante l'aggiornamento!!Task cancellato "+e);
 											errorUpdate=true;
 										}
 									}
@@ -456,7 +461,7 @@ public class Client {
 										JOptionPane.showMessageDialog(null,"Errore aggiornamento");
 									else
 										aggiornamnetiInCoda.clear();
-									System.err.println(idStampa+"-->fine aggiornamento");
+									System.err.println(PrintId+"-->fine aggiornamento");
 									//in alcuni casi viene interro il gioco... 
 									//se inizia il turno e la sfida non è conclusa
 									
@@ -473,18 +478,18 @@ public class Client {
 									}
 								}	
 					} catch (IOException | ClassNotFoundException e ) {
-						System.err.println(idStampa+"Errore aperturn in/out!!! " + e);
+						System.err.println(PrintId+"Errore aperturn in/out!!! " + e);
 						e.printStackTrace();
 					}			
 			} catch (IOException e) {
-				System.err.println(idStampa+"Errore accetta connessione!!!Chiusra Client!!!IDK (Possibile fine turno): "+e);
+				System.err.println(PrintId+"Errore accetta connessione!!!Chiusra Client!!!IDK (Possibile fine turno): "+e);
 			}	
 		}
-		System.err.println(idStampa+"--->Fine Gioco");
+		System.err.println(PrintId+"--->Fine Gioco");
 		try {
 			socketServer.close();
 		} catch (IOException e) {
-			System.err.println(idStampa+"Chiusura socket!!!! Errore");
+			System.err.println(PrintId+"Chiusura socket!!!! Errore");
 		}
 		
 	}
@@ -496,7 +501,8 @@ public class Client {
 	*/
 	public void Start()
 	{
-		final String idStampa="Start: ";
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String PrintId=ClassName+","+MethodName+": ";
 		//Il gioco puo partire solo se sono connesso
 		//ed ho inizializzato tutti i servizi
 		if (IsConnet && isPortCorrect)
@@ -517,7 +523,7 @@ public class Client {
 				
 			} catch (IOException e) {
 				
-				System.err.println(idStampa+"-->il file non esiste "+e);
+				System.err.println(PrintId+"-->il file non esiste "+e);
 			}
 			
 			pingPong.start();
@@ -550,7 +556,7 @@ public class Client {
 		}
 		else
 		{
-			System.err.println(idStampa+"-->ErroreCollegamentoColServer O ImpossibileAprireIServiziNecessari");
+			System.err.println(PrintId+"-->ErroreCollegamentoColServer O ImpossibileAprireIServiziNecessari");
 			JOptionPane.showMessageDialog(null,"ErroreCollegamentoColServer O ImpossibileAprireIServiziNecessari");
 		}
 		
@@ -563,8 +569,9 @@ public class Client {
 	//Viene chiama in caso di fine gioco (sia normale che non)
 	private void StopGame()
 	{
-		final String idStampa="StopGame: ";
-		System.err.println(idStampa+"--->STOP---GAME<---");		
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String PrintId=ClassName+","+MethodName+": ";
+		System.err.println(PrintId+"--->STOP---GAME<---");		
 		if (GameIsStop)
 			return;
 		
@@ -578,15 +585,15 @@ public class Client {
 			GameIsStop=true;
 			socketServer.close();
 		} catch (IOException e) {
-			System.err.println(idStampa+"errore chiusura socketServer");
+			System.err.println(PrintId+"errore chiusura socketServer");
 		}
 
 
 		if(threadPingPong.isAlive())
 			try(Socket socketChiusura = new Socket("127.0.0.1", portPingPong)) {
-				System.err.println(idStampa+"-->threadPingPong terminato");
+				System.err.println(PrintId+"-->threadPingPong terminato");
 			} catch (IOException e) {
-				System.err.println(idStampa+"errore terminazione threadPingPong");
+				System.err.println(PrintId+"errore terminazione threadPingPong");
 			}
 	}
 	
@@ -598,7 +605,7 @@ public class Client {
 	{
 		private boolean isConnect;
 		private int timer;
-		
+		private final String SubClassName = this.getClass().getName();
 		
 		
 		TPingPongClientToServer(int timer)
@@ -625,17 +632,19 @@ public class Client {
 		//nel caso il server contatti per qualche motivo il client
 		public synchronized void NotifyPingPong()
 		{
-			final String idStampa="PingPong,NotifyPingPong: ";
+			final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+			final String PrintId=ClassName+"-"+SubClassName+","+MethodName+": ";
 			isConnect=true;
-			System.err.println(idStampa+"server online");
+			System.err.println(PrintId+"server online");
 			this.notify();
 		}
 		
 		@Override
 		public synchronized void run()
 		{
-			final String idStampa="PingPong,run: ";
-			System.err.println(idStampa+"--->INIZIO SERVIZIO PINGPONG<---");
+			final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+			final String PrintId=ClassName+"-"+SubClassName+","+MethodName+": ";
+			System.err.println(PrintId+"--->INIZIO SERVIZIO PINGPONG<---");
 			while(!GameIsStop)
 			{
 				while(isConnect)
@@ -644,7 +653,7 @@ public class Client {
 					try {
 						this.wait(timer);
 					} catch (InterruptedException e) {
-						System.err.println(idStampa+"Errore attera pingPong client");
+						System.err.println(PrintId+"Errore attera pingPong client");
 					}
 				}
 				
@@ -658,21 +667,21 @@ public class Client {
 					String cod = (String)inStreamPingPong.readObject();
 					if (cod.equals(keyErrorCode.get(ServerOnline.ordinal())))
 					{
-						System.err.println(idStampa+"ErrorCode "+errorCode.get(cod));
+						System.err.println(PrintId+"ErrorCode "+errorCode.get(cod));
 						isConnect=true;
 					}
 					else
 					{
-						System.err.println(idStampa+"server offline");
+						System.err.println(PrintId+"server offline");
 						StopGame();
 					}
 				} catch (Exception e) {
-					System.err.println(idStampa+"server offline");
+					System.err.println(PrintId+"server offline");
 					StopGame();
 				}
 
 			}
-			System.err.println(idStampa+"--->FINE SERVIZIO PINGPONG<---");
+			System.err.println(PrintId+"--->FINE SERVIZIO PINGPONG<---");
 		}
 	}
 	
@@ -683,19 +692,21 @@ public class Client {
 	//in caso affermatico segnalo al server che sono online
 	class TPingPongServerToClinet extends Thread 
 	{
-		private final String idStampa="ThreadPingPong,run: ";
+		private final String SubClassName = this.getClass().getName();
 		@Override
 		public void run() 
 		{
-			System.err.println(idStampa+"--->INIZIO SERVIZIO THREADPINGPONG<---");
+			final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+			final String PrintId=ClassName+"-"+SubClassName+","+MethodName+": ";
+			System.err.println(PrintId+"--->INIZIO SERVIZIO THREADPINGPONG<---");
 			while(!GameIsStop)
 			{
 				try (Socket temp = socketPingPong.accept())
 				{		
 					if(Debug)
 					{
-						System.err.println(idStampa+"-----> ipConnessione :	 "+temp.getInetAddress());
-						System.err.println(idStampa+"-----> ipServer      :	 "+ipServer);
+						System.err.println(PrintId+"-----> ipConnessione :	 "+temp.getInetAddress());
+						System.err.println(PrintId+"-----> ipServer      :	 "+ipServer);
 					}
 					if (String.valueOf(temp.getInetAddress()).substring(1).equals(ipServer))
 					{
@@ -704,14 +715,14 @@ public class Client {
 							outStreamPingPong.writeObject(keyErrorCode.get(ClientOnline.ordinal()));
 							Thread.sleep(TemporizzatoreThreadPingPong);
 						}catch (IOException | InterruptedException e){
-							System.err.println(idStampa+"errore outStreamPingPong  " + e);
+							System.err.println(PrintId+"errore outStreamPingPong  " + e);
 						}
 					}
 				} catch (IOException e) {
-				System.err.println(idStampa+"errore socketPingPong " + e);
+				System.err.println(PrintId+"errore socketPingPong " + e);
 				}
 			}
-			System.err.println(idStampa+"--->FINE SERVIZIO THREADPINGPONG<---");
+			System.err.println(PrintId+"--->FINE SERVIZIO THREADPINGPONG<---");
 		}
 	}
 	
@@ -730,7 +741,7 @@ public class Client {
 		private ObjectInputStream inStreamTGioco;
 		private ObjectOutputStream outStreamTGioco;
 		private Socket partitaSocketTGioco;
-		private final String idStampa = "TGioco,doInBackground: ";
+		private final String SubClassName = this.getClass().getName();
 		
 		public TGioco(ObjectInputStream inStream,ObjectOutputStream outStream,Socket partitaSocket)
 		{
@@ -742,10 +753,12 @@ public class Client {
 		@Override
 		protected String doInBackground() throws Exception 
 		{
+			final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+			final String PrintId=ClassName+"-"+SubClassName+","+MethodName+": ";
 			try
 			{
 				formDiGioco.resetError();
-				System.err.println(idStampa+"--->"+errorCode.get(keyErrorCode.get(InizioTurno.ordinal()))+" : "+username);
+				System.err.println(PrintId+"--->"+errorCode.get(keyErrorCode.get(InizioTurno.ordinal()))+" : "+username);
 				formDiGioco.upDateError1(errorCode.get(keyErrorCode.get(InizioTurno.ordinal()))+username);
 				formDiGioco.SetEnable();
 				System.out.println((String)inStreamTGioco.readObject());
@@ -772,7 +785,7 @@ public class Client {
 								partitaSocketTGioco.setSoTimeout(TempoSfida);
 								while (!( comando =(String)inStreamTGioco.readObject()).equals((keyErrorCode.get(FineSfida.ordinal())) ))
 								{
-									System.err.println(idStampa+"ComandoRicevto -->"+comando);
+									System.err.println(PrintId+"ComandoRicevto -->"+comando);
 									formDiGioco.upDateError1(errorCode.get(comando));
 									if( !comando.equals(keyErrorCode.get(HaiVinto.ordinal())) && !comando.equals(keyErrorCode.get(HaiPerso.ordinal())) && !comando.equals(keyErrorCode.get(PareggioFineMosse.ordinal())))
 										sfida.EnableAll();
@@ -780,9 +793,9 @@ public class Client {
 										publish(comando);
 									
 								}
-								System.err.println(idStampa+"ComandoRicevto -->"+comando);
+								System.err.println(PrintId+"ComandoRicevto -->"+comando);
 							}catch (IOException | ClassNotFoundException e){
-								System.err.println(idStampa+"sfida attaccante" + e);
+								System.err.println(PrintId+"sfida attaccante" + e);
 							}finally {
 								formDiGioco.upDateError1(errorCode.get(keyErrorCode.get(FineSfida.ordinal())));
 								formDiGioco.setFineTurno(true);
@@ -794,13 +807,13 @@ public class Client {
 					if (comando.equals(keyErrorCode.get(ConfermaComandoRicevuto.ordinal())) )
 					{
 						if(Debug)
-							System.err.println(idStampa+mapGiocatoriInfo.get(username).getPos());
+							System.err.println(PrintId+mapGiocatoriInfo.get(username).getPos());
 						if(!mapGiocatoriInfo.get(username).getPos().equals(formDiGioco.NewPosCitta()))
 						{
 							mapGiocatoriInfo.get(username).setPos(formDiGioco.NewPosCitta());
 							if(Debug)
-								System.err.println(idStampa+mapGiocatoriInfo.get(username).getPos());
-							System.err.println(idStampa+"comando: "+comando);
+								System.err.println(PrintId+mapGiocatoriInfo.get(username).getPos());
+							System.err.println(PrintId+"comando: "+comando);
 							List<String> app = new LinkedList<>();
 							for (String user : mapGiocatoriInfo.keySet()) 
 							{
@@ -810,20 +823,20 @@ public class Client {
 							}
 							formDiGioco.upDataGiocatori(app);
 							if(Debug)
-								System.err.println(idStampa+mapGiocatoriInfo.get(username).getPos());
+								System.err.println(PrintId+mapGiocatoriInfo.get(username).getPos());
 						}
 					}
 				}
 				
 				
-				System.err.println(idStampa+"ComandoRicevto -->"+errorCode.get(comando));
+				System.err.println(PrintId+"ComandoRicevto -->"+errorCode.get(comando));
 				inStreamTGioco.close();
 				outStreamTGioco.close();
 				partitaSocketTGioco.close();
 				formDiGioco.SetDisable();
 				
 			}catch(IOException | ClassNotFoundException e){
-				System.err.println(idStampa+"Errore Lettura Comando Mossa/Aggiornamento!!!" + e);		
+				System.err.println(PrintId+"Errore Lettura Comando Mossa/Aggiornamento!!!" + e);		
 			}
 			finally 
 			{
@@ -852,7 +865,7 @@ public class Client {
 		ObjectInputStream inStreamTSfida;
 		ObjectOutputStream outStreamTSfida;
 		Socket partitaSocketTSfida;
-		private final String idStampa="TSfida,doInBackground: ";
+		private final String SubClassName=this.getClass().getName();
 		
 		public TSfida(ObjectInputStream inStream,ObjectOutputStream outStream,Socket partitaSocket)
 		{
@@ -867,6 +880,10 @@ public class Client {
 		
 		@Override
 		protected String doInBackground() throws Exception {
+			
+			final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+			final String PrintId=ClassName+"-"+SubClassName+","+MethodName+": ";
+			
 			String comando;
 			sfida = new Battle(mapGiocatoriInfo.get(username).getPunteggio(), outStreamTSfida,errorCode,keyErrorCode,username,TemporizzatoreMossaAutomatica);
 			sfida.setVisible(true);
@@ -874,20 +891,20 @@ public class Client {
 				partitaSocketTSfida.setSoTimeout(TempoSfida);
 				while (!( comando =(String)inStreamTSfida.readObject()).equals((keyErrorCode.get(FineSfida.ordinal())) ))
 				{
-					System.err.println(idStampa+"ComandoRicevto -->"+comando);
+					System.err.println(PrintId+"ComandoRicevto -->"+comando);
 					formDiGioco.upDateError1(errorCode.get(comando));
 					if( !comando.equals(keyErrorCode.get(HaiVinto.ordinal())) && !comando.equals(keyErrorCode.get(HaiPerso.ordinal())) && !comando.equals(keyErrorCode.get(PareggioFineMosse.ordinal())) )
 						sfida.EnableAll();
 					else
 						publish(comando);
 				}
-				System.err.println(idStampa+"ComandoRicevto -->"+comando);
+				System.err.println(PrintId+"ComandoRicevto -->"+comando);
 				formDiGioco.upDateError1(errorCode.get(comando));
 				inStreamTSfida.close();
 				outStreamTSfida.close();
 				partitaSocketTSfida.close();
 			}catch(IOException | ClassNotFoundException e){
-				System.err.println(idStampa+"Sfida sfidante" + e);
+				System.err.println(PrintId+"Sfida sfidante" + e);
 			}finally {
 				sfida.close();
 				formDiGioco.upDateError1(errorCode.get(keyErrorCode.get(FineSfida.ordinal())));
@@ -915,7 +932,7 @@ public class Client {
 		ObjectInputStream inStreamTAggiornamento;
 		ObjectOutputStream outStreamTAggiornamento;
 		Socket partitaSocketTAggiornamento;
-		private final String idStampa="TAggiornamento,run: ";
+		private final String SubClassName=this.getClass().getName();
 		public TAggiornamento(ObjectInputStream inStream,ObjectOutputStream outStream,Socket partitaSocket)
 		{
 			this.inStreamTAggiornamento=inStream;
@@ -926,11 +943,14 @@ public class Client {
 		@Override
 		public void run() 
 		{
+			final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+			final String PrintId=ClassName+"-"+SubClassName+","+MethodName+": ";
+			
 			formDiGioco.upDateError1(errorCode.get(keyErrorCode.get(Aggiornamento.ordinal())));
 			String aggiornamento;
 			try {
 				aggiornamento = (String)inStreamTAggiornamento.readObject();
-				System.err.println(idStampa+"Aggiornamento -->" + aggiornamento);
+				System.err.println(PrintId+"Aggiornamento -->" + aggiornamento);
 				
 				//variabile di appoggio per analizzare il contenuto dell'aggiornamento
 				String[] temp = aggiornamento.split(",");
@@ -1008,7 +1028,7 @@ public class Client {
 				outStreamTAggiornamento.close();
 				partitaSocketTAggiornamento.close();
 			} catch (ClassNotFoundException | IOException e) {
-				System.err.println(idStampa+"Errore fase di aggiornamento " +e);
+				System.err.println(PrintId+"Errore fase di aggiornamento " +e);
 			}
 			
 		}
