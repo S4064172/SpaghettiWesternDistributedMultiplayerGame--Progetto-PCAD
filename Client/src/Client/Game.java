@@ -87,26 +87,28 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 	
 	private Grafox grafox;
 	
-	ConcurrentHashMap<String, String> errorCode;
-	List<String> keyErrorCode;
+	private ConcurrentHashMap<String, String> errorCode;
+	private List<String> keyErrorCode;
 	
-	List<String> adiacent;
-	ObjectOutputStream outClient;
+	private List<String> adiacent;
+	private ObjectOutputStream outClient;
 	private JTextField FazionePlayer;
 	private JTextField UserPlayer;
 	private JTextField MunizioniPlayer;
 	private JTextField PosizionePlayer;
 	
-	JLabel labelImageGrafox;
+	private JLabel labelImageGrafox;
 	
 	
-	mxGraphComponent graphComponent;
-	JScrollPane GraphPane;
-	JScrollPane ChatInvioPanel;
-	JScrollPane ChatPanel;
+	private mxGraphComponent graphComponent;
+	private JScrollPane GraphPane;
+	private JScrollPane ChatInvioPanel;
+	private JScrollPane ChatPanel;
 	private JTextField DatiPersonali;
 	
 	
+	private final boolean Debug = false;
+	private final String ClassName = this.getClass().getName();
 	
 	private void SetView()
 	{
@@ -115,7 +117,7 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 		Border border = BorderFactory.createLineBorder(Color.BLACK);
 		
 		setTitle("Spaghetti Western Distributed Multiplayer Game");
-//---------------------	
+
 		JScrollPane InfoPanel = new JScrollPane();
 		info = new JTextArea();
 		info.setOpaque(false);
@@ -129,7 +131,6 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 		InfoPanel.getViewport().setOpaque(false);
 		InfoPanel.setOpaque(false);
 
-//-------------------
 		DatiPersonali = new JTextField("Dati Personali :");
 		DatiPersonali.setEditable(false);
 		DatiPersonali.setColumns(10);
@@ -164,7 +165,7 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 		MunizioniPlayer.setFont(new Font("Times New Roman", Font.PLAIN, 13));
 		MunizioniPlayer.setForeground(Color.WHITE);
 		MunizioniPlayer.setOpaque(false);
-//---------------------		
+
 		Mosse = new JComboBox<>();
 		Mosse.setMaximumRowCount(5);
 		Mosse.addActionListener(this);
@@ -175,8 +176,7 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 		
 		
 		FineTurno = new JButton("FineTurno");
-		FineTurno.addActionListener(this);
-//-------------------------		
+		FineTurno.addActionListener(this);	
 		
 		Chat = new JTextArea();
 		Chat.setFont(new Font("Times New Roman", Font.PLAIN, 13));
@@ -195,8 +195,7 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 		ChatPanel.getViewport().setOpaque(false);
 		ChatPanel.setOpaque(false);
 		
-		
-//------------------		
+				
 		ChatInvio = new JTextArea();
 		ChatInvio.setTabSize(4);
 		ChatInvio.setFont(new Font("Times New Roman", Font.PLAIN, 13));
@@ -213,10 +212,7 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 		ChatInvioPanel.setOpaque(false);
 		ChatInvioPanel.getViewport().setOpaque(false);
 		
-		 
-		
-		
-//---------------------------------		
+		 	
 		JScrollPane ErrorPanel = new JScrollPane();
 		Error = new JTextArea();
 		Error.setEditable(false);
@@ -229,14 +225,11 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 		ErrorPanel.setOpaque(false);
 		
 		
-//---------------------------------		
 		
 		graphComponent = grafox.StampaGrafo(citta);	
-		
 		GraphPane = new JScrollPane(graphComponent);
 		GraphPane.setOpaque(false);
 		GraphPane.getViewport().setOpaque(false);
-	//	GraphPane.setBorder(null);
 		
 		
 		labelImageGrafox = new JLabel();
@@ -372,12 +365,15 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 	
 	public void upDataCitta(List<String> adiacent)
 	{
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String printId=ClassName+","+MethodName+": ";
 		Mosse.removeAllItems();
 		if (adiacent.isEmpty())
 			throw new IllegalAccessError();
 		Mosse.addItem("-->CambiaCitta<--");
 		for (String nomeCitta : adiacent) {
-//			System.err.println(nomeCitta+"******************");
+			if(Debug)
+			System.err.println(printId+"nomeCita: "+nomeCitta);
 			Mosse.addItem(nomeCitta);
 		}
 	
@@ -385,23 +381,33 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 	
 	public  void upDataGiocatoriTogli(String giocatore)
 	{
-//		System.err.println("/*/*/*/*/*/*/*/*/*/*/*/  togli" + giocatore);
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String printId=ClassName+","+MethodName+": ";
+		if(Debug)
+			System.err.println(printId+"rimozioneGiocatore: " + giocatore);
 		Giocatori.removeItem(giocatore);
 	}
 	
 	public  void upDataGiocatoriAggiungi(String giocatore)
 	{
-//		System.err.println("/*/*/*/*/*/*/*/*/*/*/*/  metti");
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String printId=ClassName+","+MethodName+": ";
+		if(Debug)
+			System.err.println(printId+"inserimentoGiocatore: " + giocatore);
 		Giocatori.addItem(giocatore);
 	}
 	
 	public  void upDataGiocatori(List<String> giocatori)
 	{
-//		System.err.println("/*/*/*/*/*/*/*/*/*/*/*/  togliMetti");
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String printId=ClassName+","+MethodName+": ";
+		if(Debug)
+			System.err.println(printId);
 		Giocatori.removeAllItems();
 		Giocatori.addItem("-->Attacca<--");
 		for (String nomeGiocatore : giocatori) {
-//			System.err.println(nomeGiocatore+"******************");
+			if(Debug)
+				System.err.println(printId+"inserimentoListaGiocatore"+nomeGiocatore);
 			Giocatori.addItem(nomeGiocatore);
 		}		
 	}
@@ -418,6 +424,8 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 	
 	public void setClassifica(ConcurrentHashMap<String, InfoGiocatore> temp)
     {
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String printId=ClassName+","+MethodName+": ";
         lockClassifica.lock();
         List<String> classifica= new LinkedList<>();
         info.setText("");
@@ -427,32 +435,28 @@ public class Game extends JFrame implements ActionListener,KeyListener{
         info.append("Giocatore \t Punteggio\n");
         for(int i=classifica.size()-1 ; i>=0; i--)
         {
-//            System.err.println("--->"+classifica.size());
-//            System.err.println("--->"+i);
-//            System.err.println("--->"+classifica.get(i));
-//            System.err.println("--->"+temp.get(classifica.get(i)).getPunteggio());
-            info.append(classifica.get(i)+"	: "+temp.get(classifica.get(i)).getPunteggio()+"\n");
+        	if(Debug) {
+            System.err.println(printId+"dimmensioneClassifica:"+classifica.size());
+            System.err.println(printId+"indice:"+i);
+            System.err.println(printId+"elementoInPosizioneI"+classifica.get(i));
+            System.err.println(printId+"punteggioElementoPosizioneI"+temp.get(classifica.get(i)).getPunteggio());
+        	}
+        	info.append(classifica.get(i)+"	: "+temp.get(classifica.get(i)).getPunteggio()+"\n");
         }
         lockClassifica.unlock();
     }
 
     public void bubbleSort(List<String> temp, ConcurrentHashMap<String, InfoGiocatore> hash)
     {
-       // boolean swapped = true;
-        for (int i = 0; i < temp.size() /*&& swapped*/; i++) {
-          //  swapped = false;
+       
+        for (int i = 0; i < temp.size() ; i++) {
             System.out.println("number of iteration" + i);
 
             for (int j = 0; j < temp.size()-1; j++) {
-
-//                System.err.println("-||->"+(hash.get(temp.get(j)).getPunteggio() > hash.get(temp.get(j+1)).getPunteggio()));
-//                System.err.println("-->"+hash.get(temp.get(j)).getPunteggio());
-//                System.err.println("-->"+hash.get(temp.get(j+1)).getPunteggio());
                 if (hash.get(temp.get(j)).getPunteggio() > hash.get(temp.get(j+1)).getPunteggio()) {
                     String aux = temp.get(j);
                     temp.set(j, temp.get(j+1));
                     temp.set(j+1, aux);
-                    //swapped = true;
                 }
             }
         }
@@ -475,27 +479,22 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 	
 	public void SetVisible()
 	{
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String printId=ClassName+","+MethodName+": ";
 		setVisible(true);
 		SwingUtilities.invokeLater(new Runnable()
 		{
-			
 			@Override
 			public void run() {
-				
-
 				BufferedImage imgGrafo = null;
 				try {
 					imgGrafo = ImageIO.read(ClassLoader.getSystemResource("ClientImage/GraphBackGroung.jpg"));
 				} catch (IOException e) {
-					System.err.println("errore lettura immagine "+e);
+					System.err.println(printId+"errore lettura immagine "+e);
 				}
-								
-				System.err.println("---->"+Integer.valueOf((int) getWidth()) + Integer.valueOf((int) getHeight()));
 				Image dimgGrafo = imgGrafo.getScaledInstance(Integer.valueOf((int) getWidth()),Integer.valueOf((int) getHeight()),Image.SCALE_SMOOTH);
 				ImageIcon backgroundImageGrafo = new ImageIcon(dimgGrafo);
 				labelImageGrafox.setIcon(backgroundImageGrafo);
-				
-				
 			}
 		});
 	}
@@ -526,10 +525,13 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 	
 	public void spegniIcona(String fazione, String citta)
 	{
-		System.err.println("Fazione -->"+fazione);
-//		System.err.println("B-*-/-/-/-/-/-/*/*/*/*/*/"+grafox.getListVertex().get(indexOfCity(citta)).getCountBuoni());
-//		System.err.println("c-*-/-/-/-/-/-/*/*/*/*/*/"+grafox.getListVertex().get(indexOfCity(citta)).getCountCattivi());
-//		
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String printId=ClassName+","+MethodName+": ";
+		System.err.println(printId+"Fazione -->"+fazione);
+		if(Debug) {
+			System.err.println(printId+"buoniNumero:"+grafox.getListVertex().get(indexOfCity(citta)).getCountBuoni());
+			System.err.println(printId+"cattiviNumero:"+grafox.getListVertex().get(indexOfCity(citta)).getCountCattivi());
+		}
 		if(fazione.equals(errorCode.get(keyErrorCode.get(FazioneBuoni.ordinal()))))
 		{
 			grafox.getListVertex().get(indexOfCity(citta)).minuscountBuoni();
@@ -551,11 +553,15 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 	
 	public void accendiIncona(String fazione, String newCity)
 	{
-//		System.err.println("Fazione -->"+fazione);
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String printId=ClassName+","+MethodName+": ";
+		if(Debug)
+			System.err.println(printId+"Fazione -->"+fazione);
 		if(fazione.equals(errorCode.get(keyErrorCode.get(FazioneBuoni.ordinal()))))
 		{
 			grafox.getListVertex().get(indexOfCity(newCity)).addcountBuoni();
-//			System.err.println("----------"+getListVertex().get(indexOfCity(newCity)).getCountBuoni());
+			if(Debug)
+				System.err.println(printId+"buoniNumero: "+grafox.getListVertex().get(indexOfCity(newCity)).getCountBuoni());
 			if(grafox.getListVertex().get(indexOfCity(newCity)).getCountBuoni()>0)
 			{
 				grafox.upDateGraphBuoni(newCity, true);
@@ -565,7 +571,8 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 		if(fazione.equals(errorCode.get(keyErrorCode.get(FazioneCattivi.ordinal()))))
 		{
 			grafox.getListVertex().get(indexOfCity(newCity)).addcountCattivi();
-//			System.err.println("----------"+grafox.getListVertex().get(indexOfCity(newCity)).getCountCattivi());
+			if(Debug)
+				System.err.println(printId+"buoniNumero: "+grafox.getListVertex().get(indexOfCity(newCity)).getCountCattivi());
 			if(grafox.getListVertex().get(indexOfCity(newCity)).getCountCattivi()>0)
 			{
 				grafox.upDateGraphCattivi(newCity, true);
@@ -594,7 +601,8 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 	@Override
 	public void actionPerformed(ActionEvent arg0)
 	{
-
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String printId=ClassName+","+MethodName+": ";
 		if (arg0.getSource()==FineTurno)
 		{
 			new SendComando(keyErrorCode.get(ComandoFineTurno.ordinal())).execute();
@@ -607,13 +615,13 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 			String newCity= ((JComboBox<String>)arg0.getSource()).getSelectedItem().toString();
 			if(newCity.equals("-->CambiaCitta<--"))
 				return;
-			System.err.println("-->"+newCity);
+			System.err.println(printId+"newCity-->"+newCity);
 			spegniIcona(fazione,citta);
 			grafox.upDateGraph(citta, false);
 			accendiIncona( fazione,  newCity);
 			grafox.upDateGraph(newCity,true);
 			citta=newCity;
-			PosizionePlayer.setText("posizione-->"+citta);
+			PosizionePlayer.setText(printId+"posizione-->"+citta);
 			new SendComando(keyErrorCode.get(ComandoMossa.ordinal())+","+citta).execute();
 			upDataCitta(grafox.adiecent(citta));
 			Mosse.setEnabled(false);
@@ -647,31 +655,33 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 	
 	class Read extends SwingWorker<String, String>
 	{
-
+		private final String SubClassName = this.getClass().getName();
 		@Override
 		protected String doInBackground()  
 		{
+			final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+			final String printId=ClassName+"-"+SubClassName+","+MethodName+": ";
 			String textRicevuto;
 			while (true)
 			{
-				System.err.println("--->attesaconnsessione chat");
+				System.err.println(printId+"--->attesaconnsessione chat");
 				try(Socket socketPartitaChat = socketServerChat.accept())
 				{
 					System.err.println("--->connessione chat");
 					try (ObjectInputStream inStream = new ObjectInputStream(socketPartitaChat.getInputStream()))
 					{
 						textRicevuto = (String)inStream.readObject();
-						System.err.println("---->ricevuto"+textRicevuto);
+						System.err.println(printId+"---->ricevuto"+textRicevuto);
 					} catch (ClassNotFoundException | IOException e) {
-						System.err.println("Errore lettura messaggio chat " + e);
+						System.err.println(printId+"Errore lettura messaggio chat " + e);
 						break;
 					}
 					publish(textRicevuto);
 					
 				}catch (Exception e) {
-					System.err.println("errore connessione chat "+e);
+					System.err.println(printId+"errore connessione chat "+e);
 				}	
-				System.err.println("--->Fine elaborazione richiseta chat");
+				System.err.println(printId+"--->Fine elaborazione richiseta chat");
 			}
 			return null;
 		}
@@ -686,9 +696,12 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 	class WriteChat extends SwingWorker<String, String>
 	{
 
+		private final String SubClassName = this.getClass().getName();
+		
 		@Override
 		protected String doInBackground()  {
-			
+			final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+			final String printId=ClassName+"-"+SubClassName+","+MethodName+": ";
 			
 			try (	Socket chat = new Socket(ip, port);
 					ObjectOutputStream outStream = new ObjectOutputStream(chat.getOutputStream()))
@@ -701,7 +714,7 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 					ChatInvio.setText("");
 				}
 			} catch (IOException e) {
-				System.err.println("Errore scrittura chat " + e );
+				System.err.println(printId+"Errore scrittura chat " + e );
 			}
 			
 			return null;
@@ -711,16 +724,18 @@ public class Game extends JFrame implements ActionListener,KeyListener{
 	class SendComando extends SwingWorker<String, String>
 	{
 		private String comando;
-		
+		private final String SubClassName = this.getClass().getName();
 		public SendComando(String comando) {
 			this.comando=comando;
 		}
 		@Override
 		protected String doInBackground()  {
+			final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+			final String printId=ClassName+"-"+SubClassName+","+MethodName+": ";
 			try {
 				outClient.writeObject(comando);
 			} catch (IOException e) {
-				System.err.println("Errore scrittura chat " + e );
+				System.err.println(printId+"Errore scrittura chat " + e );
 			}
 			return null;
 		}
