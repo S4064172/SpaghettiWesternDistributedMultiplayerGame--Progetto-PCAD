@@ -38,6 +38,8 @@ public class Grafox {
 	
 	private String fazioneBuoni;
 	
+	private final boolean Debug=false;
+	private final String ClassName = this.getClass().getName();
 	
 	public Grafox(DatiGraph d, mxGraph graph,List<String> listCitta,String fazione,String fazioneBuoni)  {
 		this.fazioneBuoni = fazioneBuoni;
@@ -66,6 +68,9 @@ public class Grafox {
 	
 	public mxGraphComponent StampaGrafo(String nameCitta)
 	{
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String PrintId=ClassName+","+MethodName+": ";
+		
 		final mxGraphComponent graphComponent;
 		
 		Map<String, Object> edgeStyle = graph.getStylesheet().getDefaultEdgeStyle();
@@ -97,7 +102,7 @@ public class Grafox {
 			mxStylesheet styleSheet = graph.getStylesheet();
 			Hashtable<String, Object> style;
 			String myStleName ="";
-			System.err.println("-----"+larghezzaX+"--"+larghezzaY);
+			System.err.println(PrintId+"-----larghezzaX: "+larghezzaX+"--larghezzaY: "+larghezzaY);
 			for (int i = 0; i < listVertex.size(); i++) 
 			{
 				myStleName = Integer.toString(i);
@@ -117,7 +122,8 @@ public class Grafox {
 		}
 			
 			String immaginePersonaggio = fazione.equals(fazioneBuoni)?"Buono":"Cattivo";
-//			System.out.println("//*******************************************"+immaginePersonaggio+"********************//"+fazione+"\\\\***********************\\\\");
+			if(Debug)
+				System.out.println(PrintId+"immaginePersonaggio: "+immaginePersonaggio+" fazione: "+fazione+"");
 			int larghezzaAltriOggetti=50;
 			int larghezzaAltriOggettiY=larghezzaAltriOggetti/2;
 			for (int i = 0; i < listVertex.size(); i++)
@@ -139,15 +145,17 @@ public class Grafox {
 					graph.insertEdge(parent, null, "", V_toPrint.get(getIndexV_toPrint(listEdge.get(i).getStart())), V_toPrint.get(getIndexV_toPrint(listEdge.get(i).getEnd())));
 			
 			graph.getModel().setVisible(O_Personaggio_odierno.get(indexOfCity(nameCitta)),true);
-			
-//			System.err.println("---> size nomeCitta"+ listCitta.size());
+			if(Debug)
+				System.err.println(PrintId+"---> size nomeCitta"+ listCitta.size());
 			for (String city : listCitta) 
 			{
-//				System.err.println("-->"+city+listVertex.get(indexOfCity(city)).getCountBuoni());
+				if(Debug)
+					System.err.println(PrintId+"-->"+city+listVertex.get(indexOfCity(city)).getCountBuoni());
 				if( listVertex.get(indexOfCity(city)).getCountBuoni() > 0 )
 					graph.getModel().setVisible(O_Buoni.get(indexOfCity(city)),true);
 				
-//				System.err.println("-->"+city+listVertex.get(indexOfCity(city)).getCountCattivi());
+				if(Debug)
+					System.err.println(PrintId+"-->"+city+listVertex.get(indexOfCity(city)).getCountCattivi());
 				if( listVertex.get(indexOfCity(city)).getCountCattivi() > 0 )
 					graph.getModel().setVisible(O_Cattivi.get(indexOfCity(city)),true);
 			}
@@ -206,8 +214,13 @@ public class Grafox {
 	
 	public List<String> adiecent(String name)
 	{
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String PrintId=ClassName+","+MethodName+": ";
+		
 		for (Vertex nameTemp : listVertex) {
-//		System.err.println("*****************"+nameTemp.getName()+"---"+name);
+			
+			if(Debug)
+				System.err.println(PrintId+"nameTemp.getName(): "+nameTemp.getName()+" name:"+name);
 			if(nameTemp.getName().equals(name))
 				return nameTemp.getNeighbors();
 		}
