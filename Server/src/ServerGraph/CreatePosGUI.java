@@ -17,6 +17,9 @@ public class CreatePosGUI {
 	
 	private  List<String> ListNomiCitta;
 	
+	private final boolean Debug = false;
+	private final String ClassName = this.getClass().getName();
+	
 	private void setListNomiCitta()
 	{
 		ListNomiCitta = new LinkedList<>();
@@ -97,6 +100,9 @@ public class CreatePosGUI {
 	@SuppressWarnings("boxing")
 	public boolean create_PosGraph_aux()//ritornera un bool che indica se é andato a buon fine oppure ci sará un nuovo tentativo di rifarlo z.z
 	{
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String PrintId=ClassName+","+MethodName+": ";
+		
 		Random randomGenerator = new Random();
 		Vector<Vector<Integer>> OrigenVetex=new Vector<>(nVertex);//crea i n vertex
 		listVertex = new Vector<>(nVertex);
@@ -118,7 +124,8 @@ public class CreatePosGUI {
 		    	{
 		    		//
 		    		value=(i+incrementatore_area)*larghezzaX<this.width-larghezzaX?value=(i+incrementatore_area)*larghezzaX:(this.width-larghezzaX);
-//		    		System.err.println("---> value:"+value+" -->i:"+i+" -->m2:"+m2+" larghezzaX:"+larghezzaX);
+		    		if(Debug)
+		    			System.err.println(PrintId+"---> value:"+value+" -->i:"+i+" larghezzaX:"+larghezzaX);
 		    		if(value==0)
 		    			aux.set(0, larghezzaX+randomGenerator.nextInt((larghezzaX+(1))));
 		    		else
@@ -129,10 +136,10 @@ public class CreatePosGUI {
 		    	}while(!check && counter_limit<limit);//controllo che le posizioni non siano già state prese o si vadano a sovrapporre agli altri vertex
 		    	incrementatore_area++;
 	    	}while(counter_limit>=limit && ((i+incrementatore_area)*larghezzaX)<(this.width-larghezzaX));
-	    	System.err.println("---> n:"+counter_limit+" incrementatore_area:"+incrementatore_area+" i:"+i+" value:"+value);
+	    	System.err.println(PrintId+"---> n:"+counter_limit+" incrementatore_area:"+incrementatore_area+" i:"+i+" value:"+value);
 	    	if(counter_limit >=limit)
 	    	{
-	    		System.err.println("--->n maggiore di limit");
+	    		System.err.println(PrintId+"--->n maggiore di limit");
 	    		return false;
 	    	}
 	    	listVertex.addElement(new Vertex(ListNomiCitta.get(i), aux.get(0), aux.get(1)));// faccio il check degli edge dopo (anche se segnala unused server!!)
@@ -145,15 +152,19 @@ public class CreatePosGUI {
 	
 	public void create_PosGraph()//genera casualmente le posizioni dei vertex(che saranno i nodi del grafo)
 	{
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String PrintId=ClassName+","+MethodName+": ";
 		for(int i=0;i<100;i++)
 			if(create_PosGraph_aux())
 				return;
-		System.err.println("--->impossibile creare il grafo con questi settaggi!! Diminuire i nodi o cambiare le dimensioni!!");
+		System.err.println(PrintId+"--->impossibile creare il grafo con questi settaggi!! Diminuire i nodi o cambiare le dimensioni!!");
 		System.exit(0);
 		
 	}
 	private void create_Edge()
 	{
+		final String MethodName = Thread.currentThread().getStackTrace()[1].getMethodName();
+		final String PrintId=ClassName+","+MethodName+": ";
 		Random randomGenerator = new Random();
 		Vector<Vector<Vertex> > intersectVertex=new Vector<>(nVertex);
 		//@SuppressWarnings("unused")
@@ -181,7 +192,7 @@ public class CreatePosGUI {
 					listVertex.get(i).addNeighbor(listVertex.get(indexGenerator).getName());
 				if( !(listVertex.get(indexGenerator).containsNeighbor(listVertex.get(i).getName())) )
 					listVertex.get(indexGenerator).addNeighbor(listVertex.get(i).getName());
-				System.err.println(listVertex.get(i).getName()+"<------->"+listVertex.get(indexGenerator).getName());
+				System.err.println(PrintId+listVertex.get(i).getName()+"<------->"+listVertex.get(indexGenerator).getName());
 				listEdge.add(a);
 				intersectVertex.addElement(aux_intersect);
 			}
