@@ -2,7 +2,6 @@ package ServerClient;
 
 import java.io.Serializable;
 
-import com.sun.xml.internal.txw2.IllegalSignatureException;
 
 
 public class InfoGiocatore implements InformazioniGiocatore,Serializable {
@@ -44,7 +43,7 @@ public class InfoGiocatore implements InformazioniGiocatore,Serializable {
 		this.miss=miss;
 	}
 	
-	@Override
+	
 	public void upDatePunteggio(int proiettili)
 	{
 		this.punteggio=punteggio+proiettili;
@@ -53,7 +52,7 @@ public class InfoGiocatore implements InformazioniGiocatore,Serializable {
 	public void usoProiettile()
 	{
 		if(punteggio==0)
-			throw new IllegalSignatureException("il punteggio non puo essere negativo!!");
+			throw new IllegalStateException("il punteggio non puo essere negativo!!");
 		punteggio--;
 	}
 	

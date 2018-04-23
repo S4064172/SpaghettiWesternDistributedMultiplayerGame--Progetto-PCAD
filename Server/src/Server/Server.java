@@ -6,9 +6,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -26,9 +24,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-
-import com.sun.javafx.print.Units;
-
 import ServerClient.InfoGiocatore;
 import ServerClientGraph.InfoGraph;
 import ServerClientGraph.PosGraph;
@@ -62,11 +57,10 @@ public class Server {
 	private ReentrantLock LockMapGiocatoriInfo = new ReentrantLock();
 	//Blocca l'inizio della partita, utilizzato come sincronizzatore
 	private ReentrantLock lockInizioGame = new ReentrantLock();
-	//Condizione utilizzate per la sincronizzazione
-//private Condition conInizioGame = lockInizioGame.newCondition();
+	
 	//Blocca le modifiche ai pool (forse per essere piu concorrenti meglio un pool un lock)
 	private ReentrantLock lockPool = new ReentrantLock();
-//--controllare i lock su mapInfo
+
 	//Memorizza tutte le informazioni del giocatore (Della connessione) associando l'username alla propria struttura dati
 	private ConcurrentHashMap<String, Giocatore> mapGiocatori;
 	//Memorizza tutte le informazioni del giocatore (Del gioco) associando l'username alla propria struttura dati
@@ -129,10 +123,10 @@ public class Server {
 	
 	private float perditaMunizioniSfida=0.3f;
 	private float perditaMunizioniBrutto= 0.3f;
-	List<String> tempListCitta;
+	private List<String> tempListCitta;
 	
-	ReentrantLock LockGame = new ReentrantLock();
-	List<Future> futureTaskRiconnessione = new LinkedList<>();
+	private ReentrantLock LockGame = new ReentrantLock();
+	private List<Future> futureTaskRiconnessione = new LinkedList<>();
 	
 	
 	private final boolean Debug = false;
@@ -347,6 +341,7 @@ public class Server {
 			}
 			return ErroreRegistrazioneRestart;
 		}
+		
 		//Controllo fazioni corrette
 		if(!inputStreamFazione.equals(errorCode.get(keyErrorCode.get(FazioneBuoni.ordinal()))) && !inputStreamFazione.equals(errorCode.get(keyErrorCode.get(FazioneCattivi.ordinal()))) )
 			throw new IllegalArgumentException("La fazione indicata è inesistente!! Questo non doveva succedere!!");
@@ -370,6 +365,7 @@ public class Server {
 			}
 			return  ErroreRegistrazioneRestart;
 		}	
+		
 		//Se disponibile
 		if(mapGiocatori.size()>=MaxGiocatori)
 		{
@@ -417,7 +413,6 @@ public class Server {
 		LockMapGiocatori.unlock(); 
 		LockListBuoniCattivi.unlock();
 		//se fazioni equilibrate
-		
 		InfoGiocatore infoGiocatore = new InfoGiocatore(0,null,false,inputStreamFazione);	
 		//inserisco i dati del giocatore
 		giocatore.setIp(String.valueOf(clientSocket.getInetAddress()).substring(1));
@@ -427,6 +422,7 @@ public class Server {
 		giocatore.setFazione(inputStreamFazione);
 		giocatore.setPortaChat(Integer.parseInt(inputStreamPortaChat));
 		giocatore.setPortaPingPong(Integer.parseInt(inputSteamPortaPingPong));
+		
 		if(Debug)
 		{
 			System.err.println(PrintId+"server reciver user***"+inputStreamUserName);
@@ -456,6 +452,7 @@ public class Server {
 		}
 		try{
 			outStreamRegistrazione.writeObject(keyErrorCode.get(ConfermaAvvenutaRegistrazione.ordinal()));
+			System.err.println(keyErrorCode.get(ConfermaAvvenutaRegistrazione.ordinal()));
 		} catch (IOException e1){
 			//se mi salta anche questa notifica, c'è il timeOut nel client che fa resettare tutto
 			System.err.println(PrintId+"Errore notifica avvenuta registrazione!!! "+e1);
@@ -1122,14 +1119,24 @@ concessaRiconnessione(100, 1100);
 											if(IsBrutto)
 											{
 												mapGiocatoriInfo.get(player.getUsername()).upDatePunteggio(ricarica-(int)(munizioni*perditaMunizioniBrutto));
-												propagazioneInfo(buoni, keyErrorCode.get(SfidaRicarico.ordinal())+","+ricarica+","+player.getUsername()+","+(int)(munizioni*perditaMunizioniBrutto),null);
-												propagazioneInfo(cattivi, keyErrorCode.get(SfidaRicarico.ordinal())+","+ricarica+","+player.getUsername()+","+(int)(munizioni*perditaMunizioniBrutto),null);
+												propagazioneInfo(buoni, keyErrorCode.get(SfidaRicarico.ordinal())+","+
+																						 ricarica+","+player.getUsername()+","+
+																						 (int)(munizioni*perditaMunizioniBrutto)+","+
+																						 mapGiocatoriInfo.get(player.getUsername()).getPunteggio(),null);
+												propagazioneInfo(cattivi, keyErrorCode.get(SfidaRicarico.ordinal())+","+
+																						   ricarica+","+player.getUsername()+","+
+																						   (int)(munizioni*perditaMunizioniBrutto)+","+
+																						   mapGiocatoriInfo.get(player.getUsername()).getPunteggio(),null);
 											
 											}else
 											{
 												mapGiocatoriInfo.get(player.getUsername()).upDatePunteggio(ricarica);
-												propagazioneInfo(buoni, keyErrorCode.get(SfidaRicarico.ordinal())+","+ricarica+","+player.getUsername(),null);
-												propagazioneInfo(cattivi, keyErrorCode.get(SfidaRicarico.ordinal())+","+ricarica+","+player.getUsername(),null);							
+												propagazioneInfo(buoni, keyErrorCode.get(SfidaRicarico.ordinal())+","+
+																						 ricarica+","+player.getUsername()+","+
+																						 mapGiocatoriInfo.get(player.getUsername()).getPunteggio(),null);
+												propagazioneInfo(cattivi, keyErrorCode.get(SfidaRicarico.ordinal())+","+
+														 								   ricarica+","+player.getUsername()+","+
+														 								   mapGiocatoriInfo.get(player.getUsername()).getPunteggio(),null);							
 											}
 										
 										}

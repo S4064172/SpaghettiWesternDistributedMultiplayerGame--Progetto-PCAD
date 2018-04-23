@@ -225,10 +225,11 @@ public class Client {
 				return -1;
 			}
 			
-			System.err.println(PrintId+"----InizioFaseIvioDati");
+			System.err.println(PrintId+"----InizioFaseInvioDati");
 			StartGame form = new StartGame(outStream,port,portChat,portPingPong,errorCode,keyErrorCode);
 			form.SetVisible();			
-			try {
+			try 
+			{
 				//risposte della fase di registrazione
 				while( 	!((response = (String)in.readObject()).equals(keyErrorCode.get(ConfermaAvvenutaRegistrazione.ordinal()))) && 
 						!(response.equals(keyErrorCode.get(ConfermaAvvenutaRiconnessione.ordinal()))) )
@@ -240,7 +241,7 @@ public class Client {
 						response.equals(keyErrorCode.get(ErroreClientOnline.ordinal())))
 					{
 						form.SetIsConnect(false);
-						System.err.println(PrintId+"----FineFaseIvioDati");
+						System.err.println(PrintId+"----FineFaseInvioDati");
 						return -1;
 					}
 				}
@@ -260,6 +261,7 @@ public class Client {
 			catch (ClassNotFoundException | IOException e1)
 			{
 				System.err.println(PrintId+"Errore messaggio conferma campi iscrizione!! Riavviare il client!! " + e1);
+				e1.printStackTrace();
 				socketClient.close();
 				form.SetError(errorCode.get(keyErrorCode.get(ConnessioneAssente.ordinal())));
 				form.SetIsConnect(false);
@@ -978,27 +980,27 @@ public class Client {
 						{				
 							if(temp[2].equals(username))
 							{
-								if(temp.length == 4)
+								if(temp.length == 5)
 								{
 									if(Integer.parseInt(temp[1])==0)
 										JOptionPane.showMessageDialog(null,"Il brutto ti ha rubato "+temp[3]+" munizioni");	
 									else
 										JOptionPane.showMessageDialog(null,"Il brutto ti ha rubato "+temp[3]+" munizioni\n ma ne hai trovate "+temp[1]);	
-									mapGiocatoriInfo.get(temp[2]).upDatePunteggio(Integer.parseInt(temp[1])-Integer.parseInt(temp[3]));
+									mapGiocatoriInfo.get(temp[2]).setPunteggio(Integer.parseInt(temp[4]));
 								}
 								else
 								{
 									JOptionPane.showMessageDialog(null," Hai trovato "+temp[1]+" munizioni");	
-									mapGiocatoriInfo.get(temp[2]).upDatePunteggio(Integer.parseInt(temp[1]));
+									mapGiocatoriInfo.get(temp[2]).setPunteggio(Integer.parseInt(temp[3]));//upDatePunteggio(Integer.parseInt(temp[1]));
 								}
 								formDiGioco.upDateDatiPersonaliMunizioni(mapGiocatoriInfo.get(username).getPunteggio());
 							}
 							else
 							{
-								if(temp.length == 4)
-									mapGiocatoriInfo.get(temp[2]).upDatePunteggio(Integer.parseInt(temp[1])-Integer.parseInt(temp[3]));
+								if(temp.length == 5)
+									mapGiocatoriInfo.get(temp[2]).setPunteggio(Integer.parseInt(temp[4]));//upDatePunteggio(Integer.parseInt(temp[1])-Integer.parseInt(temp[3]));
 								else
-									mapGiocatoriInfo.get(temp[2]).upDatePunteggio(Integer.parseInt(temp[1]));	
+									mapGiocatoriInfo.get(temp[2]).setPunteggio(Integer.parseInt(temp[3]));//upDatePunteggio(Integer.parseInt(temp[1]));	
 							}
 							formDiGioco.setClassifica(mapGiocatoriInfo);
 						}else

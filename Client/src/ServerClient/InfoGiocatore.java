@@ -28,11 +28,11 @@ public class InfoGiocatore implements InformazioniGiocatore,Serializable {
 			this.punteggio=puntegggio;
 		}
 		
-		@Override
+		/*@Override
 		public void upDatePunteggio(int upDate)
 		{
 			this.punteggio=this.punteggio+upDate;
-		}
+		}*/
 		
 		@Override
 		public int getPunteggio() {
