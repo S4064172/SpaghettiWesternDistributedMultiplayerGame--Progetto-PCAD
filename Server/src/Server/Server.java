@@ -97,6 +97,7 @@ public class Server {
 	private int TempoPingPongLettura=2000;
 	private int MaxGiocatori = 4;
 	private int MinGiocatori = 4;
+	private int timeWaitTask = 1100;
 	
 	//definisce se il gioco è iniziato o no, utile per sapere se un client
 	//si puo registrare o meno
@@ -912,7 +913,20 @@ System.err.println(PrintId+"--->Sgancio della risorza....");
 		return task;
 	}
 	
-	
+	private boolean attesaTaskRiconnessione(int timeWaitTask)
+	{
+		boolean flag=true;
+		for (Future result : futureTaskRiconnessione) {
+			try {
+					result.get((timeWaitTask),TimeUnit.MILLISECONDS);
+			} catch (InterruptedException | ExecutionException | TimeoutException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				flag=false;
+			}
+		}
+		return flag;
+	}
 	
 	private void concessaRiconnessione(int timeWait, int timeWaitTask)
 	{
@@ -930,17 +944,8 @@ System.err.println(PrintId+"--->Sgancio della risorza....");
 		
 		System.err.println(PrintId+"--->Fine Permesso Riconnessione");
 		LockGame.lock();
-		boolean flag=true;
-			for (Future result : futureTaskRiconnessione) {
-				try {
-					result.get((timeWaitTask),TimeUnit.MILLISECONDS);
-			} catch (InterruptedException | ExecutionException | TimeoutException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				flag=false;
-			}
-		}
-		if (flag)
+		
+		if (attesaTaskRiconnessione(timeWaitTask))
 			futureTaskRiconnessione.clear();
 		System.err.println(PrintId+"--->Ritorno al gioco");
 	}
@@ -1025,17 +1030,7 @@ LockGame.unlock();
 			//e cambio dubito il turno
 System.err.println(PrintId+"--->Fine Permesso Riconnessione");
 LockGame.lock();
-boolean flag=true;
-for (Future result : futureTaskRiconnessione) {
-	try {
-		result.get((1100),TimeUnit.MILLISECONDS);
-} catch (InterruptedException | ExecutionException | TimeoutException e) {
-	// TODO Auto-generated catch block
-	e.printStackTrace();
-	flag=false;
-}
-}
-if (flag)
+if (attesaTaskRiconnessione(timeWaitTask))
 futureTaskRiconnessione.clear();
 System.err.println(PrintId+"--->Ritorno al gioco");
 
@@ -1075,7 +1070,7 @@ System.err.println(PrintId+"--->Ritorno al gioco");
 								while ( !(comando = (String)inStream.readObject()).equals(keyErrorCode.get(ComandoFineTurno.ordinal())))
 								{
 
-concessaRiconnessione(100, 1100);
+concessaRiconnessione(100, timeWaitTask);
 
 
 									System.err.println(PrintId+"ComandoRicevuto: "+comando);
@@ -1144,7 +1139,7 @@ concessaRiconnessione(100, 1100);
 									}
 									if (temp[0].equals((keyErrorCode.get(ComandoAttacco.ordinal()))))
 									{
-concessaRiconnessione(100, 1100);
+concessaRiconnessione(100, timeWaitTask);
 
 										if(mapGiocatoriInfo.get(player.getUsername()).getPos().equals(mapGiocatoriInfo.get(temp[1]).getPos()))
 										{
@@ -1400,7 +1395,7 @@ concessaRiconnessione(100, 1100);
 									}
 									socketPartita.setSoTimeout(TempoDurataTurno);
 							}
-concessaRiconnessione(100, 1100);
+concessaRiconnessione(100, timeWaitTask);
 
 							System.out.println(comando);
 	//sbagli a fare i conti delle munizioni							
@@ -1416,7 +1411,7 @@ concessaRiconnessione(100, 1100);
 							} catch (IOException e1) {
 								System.err.println(PrintId+"Errore notifica fine turno "+e1);
 							}
-concessaRiconnessione(100, 1100);
+concessaRiconnessione(100, timeWaitTask);
 
 						} catch (IOException e1) {
 							System.err.println(PrintId+"Errore "+e1);
@@ -1458,7 +1453,7 @@ concessaRiconnessione(100, 1100);
 						mapGiocatoriInfo.get(player.getUsername()).setMiss(miss+1);
 						LockMapGiocatori.unlock();
 						LockMapGiocatoriInfo.unlock();
-concessaRiconnessione(100, 1100);
+concessaRiconnessione(100, timeWaitTask);
 
 					}
 
